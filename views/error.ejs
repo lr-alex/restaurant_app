@@ -1,0 +1,11 @@
+<%- include('partials/head', { title }) %>
+<%- include('partials/nav') %>
+<main class="container page-shell">
+  <div class="empty-state">
+    <span class="status-kicker"><%= status %></span>
+    <h1><%= title %></h1>
+    <p><%= message %></p>
+    <a class="btn btn-primary" href="<%= homePath %>">Return to your workspace</a>
+  </div>
+</main>
+<%- include('partials/footer') %>

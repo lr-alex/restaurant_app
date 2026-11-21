@@ -1,0 +1,43 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/nav') %>
+<main class="container page-shell">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Kitchen history</p>
+      <h1>My orders</h1>
+      <p>Every order is a snapshot of what you purchased. No payment is collected in this demo.</p>
+    </div>
+    <a class="btn btn-primary" href="/customer/menu">Browse menu</a>
+  </div>
+  <%- include('../partials/flash') %>
+  <div class="vstack gap-3">
+    <% if (!orders.length) { %>
+      <div class="empty-state">
+        <h2>No orders yet</h2>
+        <p>Add something from the menu to start your first kitchen order.</p>
+        <a class="btn btn-primary" href="/customer/menu">Open the menu</a>
+      </div>
+    <% } %>
+    <% orders.forEach((order) => { %>
+      <article class="order-card">
+        <div class="order-top">
+          <div>
+            <span class="eyebrow">Order <%= order._id.toString().slice(-8).toUpperCase() %></span>
+            <h2>Branch #<%= order.branchNo %></h2>
+          </div>
+          <div class="text-end">
+            <span class="status-badge status-<%= order.status %>"><%= statusLabel(order.status) %></span>
+            <div class="small text-muted mt-2"><%= formatDateTime(order.createdAt) %></div>
+          </div>
+        </div>
+        <div class="order-lines">
+          <% order.items.forEach((item) => { %>
+            <div><span><%= item.quantity %> × <%= item.mealName %></span><strong><%= formatMoney(item.subtotal) %></strong></div>
+          <% }) %>
+        </div>
+        <div class="order-total"><span>Total</span><strong><%= formatMoney(order.totalAmount) %></strong></div>
+      </article>
+    <% }) %>
+  </div>
+</main>
+<%- include('../partials/footer') %>

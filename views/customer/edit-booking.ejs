@@ -1,0 +1,63 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/nav') %>
+<main class="container page-shell">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Reservation <%= booking._id.toString().slice(-8).toUpperCase() %></p>
+      <h1>Edit your table</h1>
+      <p>Changing the date, branch, or party size runs the capacity check again.</p>
+    </div>
+    <a class="btn btn-outline-dark" href="/customer/bookings">Back to reservations</a>
+  </div>
+  <div class="row justify-content-center">
+    <div class="col-xl-7">
+      <section class="surface-card">
+        <%- include('../partials/flash') %>
+        <form action="/customer/bookings/<%= booking._id %>/edit" method="post" class="vstack gap-3 booking-form">
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label class="form-label" for="branchNo">Branch</label>
+              <select class="form-select branch-select" id="branchNo" name="branchNo" required>
+                <% branches.forEach((branch) => { %>
+                  <option
+                    value="<%= branch.branchNo %>"
+                    <%= branch.branchNo === booking.branchNo ? 'selected' : '' %>
+                    data-address="<%= branch.address %>"
+                    data-hours="<%= branch.openTime %>–<%= branch.closeTime %>"
+                    data-rest-day="Closes <%= branch.restDay %>"
+                    data-slots="<%= JSON.stringify(branch.bookingSlots) %>"
+                  >#<%= branch.branchNo %> · <%= branch.address %></option>
+                <% }) %>
+              </select>
+              <div class="branch-note" data-branch-note></div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label" for="partySize">Party size</label>
+              <input class="form-control" id="partySize" name="partySize" type="number" min="1" max="12" value="<%= booking.partySize %>" required>
+            </div>
+          </div>
+          <div>
+            <label class="form-label" for="bookingDate">Date</label>
+            <input class="form-control" id="bookingDate" name="bookingDate" type="date" min="<%= today %>" value="<%= booking.bookingDate %>" required>
+          </div>
+          <div>
+            <label class="form-label">Available periods</label>
+            <div class="slot-picker" data-slot-picker>
+              <input type="hidden" name="slotStart" value="<%= booking.slotStart %>" data-slot-start>
+              <input type="hidden" name="slotEnd" value="<%= booking.slotEnd %>" data-slot-end>
+            </div>
+          </div>
+          <div>
+            <label class="form-label" for="notes">Notes <span class="text-muted fw-normal">(optional)</span></label>
+            <textarea class="form-control" id="notes" name="notes" rows="2" maxlength="300"><%= booking.notes %></textarea>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary" type="submit">Save changes</button>
+            <a class="btn btn-light" href="/customer/bookings">Cancel</a>
+          </div>
+        </form>
+      </section>
+    </div>
+  </div>
+</main>
+<%- include('../partials/footer') %>

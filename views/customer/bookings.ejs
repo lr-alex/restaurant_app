@@ -1,0 +1,109 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/nav') %>
+<main class="container page-shell">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Your table</p>
+      <h1>Reservations</h1>
+      <p>Choose a branch and an available seating period. Capacity is checked by the server.</p>
+    </div>
+  </div>
+  <%- include('../partials/flash') %>
+
+  <div class="row g-4">
+    <div class="col-xl-5">
+      <section class="surface-card sticky-card">
+        <p class="eyebrow">New reservation</p>
+        <h2 class="h4 mb-4">Reserve your table</h2>
+        <% if (!branches.length) { %>
+          <p class="text-muted mb-0">No branches are currently accepting reservations.</p>
+        <% } else { %>
+          <form action="/customer/bookings" method="post" class="vstack gap-3 booking-form">
+            <div>
+              <label class="form-label" for="branchNo">Branch</label>
+              <select class="form-select branch-select" id="branchNo" name="branchNo" required>
+                <% branches.forEach((branch) => { %>
+                  <option
+                    value="<%= branch.branchNo %>"
+                    data-address="<%= branch.address %>"
+                    data-hours="<%= branch.openTime %>–<%= branch.closeTime %>"
+                    data-rest-day="Closes <%= branch.restDay %>"
+                    data-slots="<%= JSON.stringify(branch.bookingSlots) %>"
+                  >#<%= branch.branchNo %> · <%= branch.address %> · <%= branch.openTime %>–<%= branch.closeTime %></option>
+                <% }) %>
+              </select>
+              <div class="branch-note" data-branch-note></div>
+            </div>
+            <div>
+              <label class="form-label" for="partySize">Party size</label>
+              <div class="input-group">
+                <button class="btn btn-outline-secondary party-step" type="button" data-target="partySize" data-step="-1" aria-label="Decrease party size">−</button>
+                <input class="form-control text-center" id="partySize" name="partySize" type="number" min="1" max="12" value="2" required>
+                <button class="btn btn-outline-secondary party-step" type="button" data-target="partySize" data-step="1" aria-label="Increase party size">+</button>
+              </div>
+            </div>
+            <div>
+              <label class="form-label" for="bookingDate">Date</label>
+              <input class="form-control" id="bookingDate" name="bookingDate" type="date" min="<%= today %>" value="<%= today %>" required>
+            </div>
+            <div>
+              <label class="form-label">Available periods</label>
+              <div class="slot-picker" data-slot-picker>
+                <input type="hidden" name="slotStart" data-slot-start>
+                <input type="hidden" name="slotEnd" data-slot-end>
+              </div>
+            </div>
+            <div>
+              <label class="form-label" for="notes">Notes <span class="text-muted fw-normal">(optional)</span></label>
+              <textarea class="form-control" id="notes" name="notes" rows="2" maxlength="300" placeholder="Allergies, celebration, accessibility needs"></textarea>
+            </div>
+            <button class="btn btn-primary" type="submit">Confirm reservation</button>
+          </form>
+        <% } %>
+      </section>
+    </div>
+
+    <div class="col-xl-7">
+      <div class="section-title">
+        <div>
+          <p class="eyebrow">History</p>
+          <h2>Your bookings</h2>
+        </div>
+        <span class="count-pill"><%= bookings.length %> total</span>
+      </div>
+      <div class="vstack gap-3">
+        <% if (!bookings.length) { %>
+          <div class="empty-state compact">
+            <h3>No reservations yet</h3>
+            <p>Your first table is waiting to be booked.</p>
+          </div>
+        <% } %>
+        <% bookings.forEach((booking, index) => { %>
+          <article class="booking-card">
+            <div class="booking-date">
+              <span><%= formatDate(booking.bookingDate) %></span>
+              <strong><%= booking.slotStart %>–<%= booking.slotEnd %></strong>
+            </div>
+            <div class="booking-info">
+              <div class="d-flex gap-2 align-items-center flex-wrap">
+                <span class="status-badge status-<%= booking.status %>"><%= statusLabel(booking.status) %></span>
+                <span class="text-muted small">Branch #<%= booking.branchNo %></span>
+              </div>
+              <h3><%= booking.partySize %> <%= booking.partySize === 1 ? 'guest' : 'guests' %></h3>
+              <% if (booking.notes) { %><p><%= booking.notes %></p><% } %>
+            </div>
+            <% if (['pending', 'confirmed'].includes(booking.status)) { %>
+              <div class="booking-actions">
+                <a class="btn btn-sm btn-outline-dark" href="/customer/bookings/<%= booking._id %>/edit">Edit</a>
+                <form action="/customer/bookings/<%= booking._id %>/cancel" method="post" data-confirm="Cancel this reservation?">
+                  <button class="btn btn-sm btn-outline-danger" type="submit">Cancel</button>
+                </form>
+              </div>
+            <% } %>
+          </article>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+</main>
+<%- include('../partials/footer') %>

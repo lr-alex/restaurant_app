@@ -1,0 +1,29 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/nav') %>
+<main class="container page-shell">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Read-only reference</p>
+      <h1>Menu</h1>
+      <p>Current catalog and availability. Changes are made by an administrator.</p>
+    </div>
+  </div>
+  <div class="row g-3">
+    <% meals.forEach((meal) => { %>
+      <div class="col-md-6 col-xl-4">
+        <article class="meal-card h-100">
+          <div class="d-flex justify-content-between gap-3">
+            <div>
+              <span class="meal-category"><%= meal.category %></span>
+              <h3><%= meal.name %></h3>
+            </div>
+            <span class="status-badge <%= meal.isAvailable ? 'status-ready' : 'status-cancelled' %>"><%= meal.isAvailable ? 'Available' : 'Unavailable' %></span>
+          </div>
+          <p><%= meal.description %></p>
+          <strong><%= formatMoney(meal.price) %></strong>
+        </article>
+      </div>
+    <% }) %>
+  </div>
+</main>
+<%- include('../partials/footer') %>

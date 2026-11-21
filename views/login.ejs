@@ -1,0 +1,55 @@
+<%- include('partials/head', { title }) %>
+<main class="login-shell">
+  <section class="login-story">
+    <div>
+      <p class="eyebrow">Seasonal Italian dining</p>
+      <h1>Saffron <span>&</span> Stone</h1>
+      <p class="lead">Reserve a table, browse the kitchen's current menu, or manage daily restaurant operations.</p>
+    </div>
+    <% if (demoLoginAvailable) { %>
+      <div class="login-demo card border-0">
+        <div class="card-body">
+          <p class="eyebrow mb-1">One-click demo access</p>
+          <p class="demo-help">Skip the form and open a prepared role workspace.</p>
+          <div class="demo-account">
+            <div><strong>Customer</strong><code>customer1</code></div>
+            <form action="/login/demo/customer" method="post">
+              <button class="btn btn-sm btn-dark" type="submit">Sign in as Customer</button>
+            </form>
+          </div>
+          <div class="demo-account">
+            <div><strong>Staff</strong><code>staff1</code></div>
+            <form action="/login/demo/staff" method="post">
+              <button class="btn btn-sm btn-dark" type="submit">Sign in as Staff</button>
+            </form>
+          </div>
+          <div class="demo-account">
+            <div><strong>Admin</strong><code>admin1</code></div>
+            <form action="/login/demo/admin" method="post">
+              <button class="btn btn-sm btn-dark" type="submit">Sign in as Admin</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    <% } %>
+  </section>
+  <section class="login-panel">
+    <div class="login-form-wrap">
+      <p class="eyebrow">Welcome back</p>
+      <h2>Sign in</h2>
+      <%- include('partials/flash') %>
+      <form action="/login" method="post" class="vstack gap-3">
+        <div>
+          <label class="form-label" for="username">Username</label>
+          <input class="form-control form-control-lg" id="username" name="username" autocomplete="username" required>
+        </div>
+        <div>
+          <label class="form-label" for="password">Password</label>
+          <input class="form-control form-control-lg" id="password" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <button class="btn btn-primary btn-lg w-100" type="submit">Enter Saffron & Stone</button>
+      </form>
+    </div>
+  </section>
+</main>
+<%- include('partials/footer') %>

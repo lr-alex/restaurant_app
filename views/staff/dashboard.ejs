@@ -1,0 +1,91 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/nav') %>
+<main class="container page-shell">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Branch #<%= currentProfile.branchNo %> · service board</p>
+      <h1>Kitchen dashboard</h1>
+      <p><%= currentProfile.name %>, keep orders moving and watch the next incoming tables.</p>
+    </div>
+    <span class="live-pill"><span></span>Live branch view</span>
+  </div>
+  <%- include('../partials/flash') %>
+
+  <div class="row g-4">
+    <div class="col-xl-8">
+      <div class="section-title">
+        <div>
+          <p class="eyebrow">Order queue</p>
+          <h2>Active kitchen orders</h2>
+        </div>
+        <span class="count-pill"><%= orders.length %> active</span>
+      </div>
+      <div class="vstack gap-3">
+        <% if (!orders.length) { %>
+          <div class="empty-state">
+            <h2>The queue is clear</h2>
+            <p>New customer orders will appear here.</p>
+          </div>
+        <% } %>
+        <% orders.forEach((order) => { %>
+          <article class="kitchen-card status-edge-<%= order.status %>">
+            <div class="order-top">
+              <div>
+                <span class="eyebrow">Order <%= order._id.toString().slice(-8).toUpperCase() %></span>
+                <h2><%= order.customer ? order.customer.name : 'Customer' %></h2>
+                <small class="text-muted"><%= formatDateTime(order.createdAt) %></small>
+              </div>
+              <span class="status-badge status-<%= order.status %>"><%= statusLabel(order.status) %></span>
+            </div>
+            <div class="order-lines">
+              <% order.items.forEach((item) => { %>
+                <div><span><strong><%= item.quantity %>×</strong> <%= item.mealName %></span><span><%= formatMoney(item.subtotal) %></span></div>
+              <% }) %>
+            </div>
+            <div class="order-top border-top pt-3 mt-3">
+              <strong><%= formatMoney(order.totalAmount) %></strong>
+              <form action="/staff/orders/<%= order._id %>/status" method="post" class="d-flex gap-2">
+                <select class="form-select form-select-sm" name="status" aria-label="Order status">
+                  <% ['placed', 'preparing', 'ready', 'completed', 'cancelled'].forEach((status) => { %>
+                    <option value="<%= status %>" <%= order.status === status ? 'selected' : '' %>><%= statusLabel(status) %></option>
+                  <% }) %>
+                </select>
+                <button class="btn btn-sm btn-dark" type="submit">Update</button>
+              </form>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+    </div>
+
+    <div class="col-xl-4">
+      <section class="surface-card sticky-card">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">Front of house</p>
+            <h2>Next tables</h2>
+          </div>
+        </div>
+        <div class="vstack gap-2">
+          <% if (!bookings.length) { %>
+            <p class="text-muted mb-0">No upcoming reservations.</p>
+          <% } %>
+          <% bookings.forEach((booking) => { %>
+            <div class="compact-booking">
+              <div>
+                <strong><%= booking.customer ? booking.customer.name : 'Guest' %></strong>
+                <span><%= formatDate(booking.bookingDate) %> · <%= booking.slotStart %></span>
+              </div>
+              <div class="text-end">
+                <strong><%= booking.partySize %></strong>
+                <span class="status-badge status-<%= booking.status %>"><%= statusLabel(booking.status) %></span>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+        <a class="btn btn-outline-dark w-100 mt-3" href="/staff/bookings">Manage all reservations</a>
+      </section>
+    </div>
+  </div>
+</main>
+<%- include('../partials/footer') %>

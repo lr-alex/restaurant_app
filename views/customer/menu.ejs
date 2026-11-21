@@ -1,0 +1,136 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/nav') %>
+<main class="container page-shell menu-page">
+  <div class="page-heading align-items-start">
+    <div>
+      <p class="eyebrow">From our kitchen</p>
+      <h1>Digital menu</h1>
+      <p>Favorites, seasonal plates, and a straightforward kitchen order.</p>
+    </div>
+    <form action="/customer/branch" method="post" class="branch-switcher">
+      <label class="form-label small" for="menuBranch">Ordering from</label>
+      <div class="input-group">
+        <select class="form-select" id="menuBranch" name="branchNo">
+          <% branches.forEach((branch) => { %>
+            <option value="<%= branch.branchNo %>" <%= branch.branchNo === selectedBranchNo ? 'selected' : '' %>>#<%= branch.branchNo %> · <%= branch.address %></option>
+          <% }) %>
+        </select>
+        <button class="btn btn-dark" type="submit">Switch</button>
+      </div>
+    </form>
+  </div>
+  <%- include('../partials/flash') %>
+
+  <% if (favoriteMeals.length) { %>
+    <section class="favorites-strip">
+      <div class="section-title">
+        <div>
+          <p class="eyebrow">Your regulars</p>
+          <h2>Favorite plates</h2>
+        </div>
+      </div>
+      <div class="row g-3">
+        <% favoriteMeals.forEach((meal) => { %>
+          <div class="col-md-6 col-xl-3">
+            <article class="favorite-card">
+              <span class="meal-category"><%= meal.category %></span>
+              <h3><%= meal.name %></h3>
+              <p><%= meal.description %></p>
+              <div class="d-flex justify-content-between align-items-center">
+                <strong><%= formatMoney(meal.price) %></strong>
+                <form action="/customer/cart/add/<%= meal._id %>" method="post">
+                  <button class="btn btn-sm btn-primary" type="submit">Add</button>
+                </form>
+              </div>
+            </article>
+          </div>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+
+  <div class="row g-4">
+    <div class="col-xl-8">
+      <% categories.forEach((category) => { %>
+        <section class="menu-category">
+          <div class="section-title">
+            <h2><%= category %></h2>
+            <span class="count-pill"><%= meals.filter((meal) => meal.category === category).length %></span>
+          </div>
+          <div class="row g-3">
+            <% meals.filter((meal) => meal.category === category).forEach((meal) => { %>
+              <div class="col-md-6">
+                <article class="meal-card">
+                  <div class="d-flex justify-content-between align-items-start gap-3">
+                    <div>
+                      <span class="meal-category"><%= meal.category %></span>
+                      <h3><%= meal.name %></h3>
+                    </div>
+                    <strong class="meal-price"><%= formatMoney(meal.price) %></strong>
+                  </div>
+                  <p><%= meal.description %></p>
+                  <div class="meal-actions">
+                    <form action="/customer/favorites/<%= meal._id %>/toggle" method="post">
+                      <button class="btn btn-sm <%= favoriteIds.has(meal._id.toString()) ? 'btn-warning' : 'btn-outline-secondary' %>" type="submit">
+                        <%= favoriteIds.has(meal._id.toString()) ? '★ Favorite' : '☆ Favorite' %>
+                      </button>
+                    </form>
+                    <form action="/customer/cart/add/<%= meal._id %>" method="post">
+                      <button class="btn btn-sm btn-primary" type="submit">Add to cart</button>
+                    </form>
+                  </div>
+                </article>
+              </div>
+            <% }) %>
+          </div>
+        </section>
+      <% }) %>
+    </div>
+    <div class="col-xl-4">
+      <aside class="cart-card sticky-card">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">Your order</p>
+            <h2>Cart</h2>
+          </div>
+          <span class="count-pill"><%= cartEntries.length %></span>
+        </div>
+        <% if (!cartEntries.length) { %>
+          <div class="empty-state compact">
+            <h3>Your cart is empty</h3>
+            <p>Add a plate from the menu to begin.</p>
+          </div>
+        <% } else { %>
+          <div class="cart-items">
+            <% cartEntries.forEach((entry) => { %>
+              <div class="cart-item">
+                <div>
+                  <strong><%= entry.meal.name %></strong>
+                  <span><%= formatMoney(entry.subtotal) %></span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <form action="/customer/cart/update/<%= entry.meal._id %>" method="post" class="quantity-form">
+                    <input class="form-control form-control-sm" name="quantity" type="number" min="1" max="20" value="<%= entry.quantity %>" aria-label="Quantity for <%= entry.meal.name %>">
+                    <button class="btn btn-sm btn-light" type="submit">Set</button>
+                  </form>
+                  <form action="/customer/cart/remove/<%= entry.meal._id %>" method="post">
+                    <button class="btn btn-sm btn-link text-danger" type="submit" aria-label="Remove <%= entry.meal.name %>">Remove</button>
+                  </form>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+          <div class="cart-total">
+            <span>Total</span>
+            <strong><%= formatMoney(cartTotal) %></strong>
+          </div>
+          <form action="/customer/orders" method="post">
+            <button class="btn btn-primary btn-lg w-100" type="submit">Send order to kitchen</button>
+          </form>
+          <p class="small text-muted text-center mt-2 mb-0">Demo ordering only. No payment is collected.</p>
+        <% } %>
+      </aside>
+    </div>
+  </div>
+</main>
+<%- include('../partials/footer') %>

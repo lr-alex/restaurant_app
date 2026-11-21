@@ -1,0 +1,32 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/nav') %>
+<main class="container page-shell">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Branch #<%= currentProfile.branchNo %> · upcoming</p>
+      <h1>My schedule</h1>
+      <p>Your assigned shifts are maintained by restaurant administration.</p>
+    </div>
+  </div>
+  <%- include('../partials/flash') %>
+  <div class="row g-3">
+    <% if (!shifts.length) { %>
+      <div class="col-12">
+        <div class="empty-state">
+          <h2>No upcoming shifts</h2>
+          <p>Ask an administrator to add your next working period.</p>
+        </div>
+      </div>
+    <% } %>
+    <% shifts.forEach((shift) => { %>
+      <div class="col-md-6 col-lg-4">
+        <article class="surface-card shift-card">
+          <p class="eyebrow"><%= formatDate(shift.shiftDate) %></p>
+          <h2><%= shift.startTime %>–<%= shift.endTime %></h2>
+          <p>Branch #<%= shift.branchNo %> · <%= currentProfile.name %></p>
+        </article>
+      </div>
+    <% }) %>
+  </div>
+</main>
+<%- include('../partials/footer') %>

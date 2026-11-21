@@ -1,0 +1,76 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/nav') %>
+<main class="container page-shell">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Member profile</p>
+      <h1>Your details</h1>
+      <p>Phone and name are editable. Membership and date of birth are managed by the restaurant.</p>
+    </div>
+  </div>
+  <%- include('../partials/flash') %>
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <section class="surface-card">
+        <p class="eyebrow">Contact information</p>
+        <form action="/customer/profile" method="post" class="vstack gap-3">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label" for="name">Name</label>
+              <input class="form-control" id="name" name="name" value="<%= currentProfile.name %>" minlength="2" maxlength="80" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="phone">Phone</label>
+              <input class="form-control" id="phone" name="phone" value="<%= currentProfile.phone %>" maxlength="30" required>
+            </div>
+          </div>
+          <button class="btn btn-primary align-self-start" type="submit">Save profile</button>
+        </form>
+      </section>
+      <section class="surface-card mt-4">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">Account</p>
+            <h2>Membership</h2>
+          </div>
+          <span class="status-badge <%= currentProfile.isMember ? 'status-confirmed' : 'status-cancelled' %>"><%= currentProfile.isMember ? 'Member' : 'Guest' %></span>
+        </div>
+        <dl class="detail-grid">
+          <div><dt>Customer code</dt><dd><%= currentProfile.customerCode %></dd></div>
+          <div><dt>Date of birth</dt><dd><%= currentProfile.dateOfBirth || 'Not recorded' %></dd></div>
+          <div><dt>VIP number</dt><dd><%= currentProfile.vipId || 'Not assigned' %></dd></div>
+          <div><dt>Login</dt><dd><%= currentUser.username %></dd></div>
+        </dl>
+      </section>
+    </div>
+    <div class="col-lg-5">
+      <section class="surface-card">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">Quick picks</p>
+            <h2>Favorites</h2>
+          </div>
+        </div>
+        <% if (!favorites.length) { %>
+          <div class="empty-state compact">
+            <h3>No favorites</h3>
+            <p>Star a meal in the menu to keep it close.</p>
+            <a class="btn btn-sm btn-primary" href="/customer/menu">Browse menu</a>
+          </div>
+        <% } %>
+        <div class="vstack gap-2">
+          <% favorites.forEach((meal) => { %>
+            <div class="favorite-row">
+              <div><strong><%= meal.name %></strong><span><%= meal.category %> · <%= formatMoney(meal.price) %></span></div>
+              <form action="/customer/favorites/<%= meal._id %>/toggle" method="post">
+                <input type="hidden" name="returnTo" value="profile">
+                <button class="btn btn-sm btn-outline-danger" type="submit">Remove</button>
+              </form>
+            </div>
+          <% }) %>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+<%- include('../partials/footer') %>

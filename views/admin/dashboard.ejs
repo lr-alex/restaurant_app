@@ -1,0 +1,59 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/nav') %>
+<main class="container page-shell">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Restaurant control</p>
+      <h1>Administration</h1>
+      <p>Configure the restaurant, people, and kitchen catalog.</p>
+    </div>
+    <a class="btn btn-primary" href="/admin/meals">Manage menu</a>
+  </div>
+  <%- include('../partials/flash') %>
+
+  <div class="row g-3 mb-5">
+    <div class="col-6 col-lg">
+      <div class="stat-card"><span>Branches</span><strong><%= stats.branchCount %></strong><a href="/admin/branches">Manage</a></div>
+    </div>
+    <div class="col-6 col-lg">
+      <div class="stat-card"><span>Available meals</span><strong><%= stats.mealCount %></strong><a href="/admin/meals">Manage</a></div>
+    </div>
+    <div class="col-6 col-lg">
+      <div class="stat-card"><span>Active staff</span><strong><%= stats.staffCount %></strong><a href="/admin/staff">Manage</a></div>
+    </div>
+    <div class="col-6 col-lg">
+      <div class="stat-card"><span>Pending tables</span><strong><%= stats.pendingBookingCount %></strong><span class="stat-note">Across all branches</span></div>
+    </div>
+    <div class="col-6 col-lg">
+      <div class="stat-card"><span>Active orders</span><strong><%= stats.activeOrderCount %></strong><span class="stat-note">Placed to ready</span></div>
+    </div>
+  </div>
+
+  <div class="section-title">
+    <div>
+      <p class="eyebrow">Recent activity</p>
+      <h2>Latest orders</h2>
+    </div>
+  </div>
+  <div class="surface-card table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th>Order</th><th>Customer</th><th>Branch</th><th>Status</th><th>Total</th><th>Placed</th></tr></thead>
+      <tbody>
+        <% if (!recentOrders.length) { %>
+          <tr><td colspan="6" class="text-center text-muted py-5">No orders have been placed.</td></tr>
+        <% } %>
+        <% recentOrders.forEach((order) => { %>
+          <tr>
+            <td><code><%= order._id.toString().slice(-8).toUpperCase() %></code></td>
+            <td><%= order.customer ? order.customer.name : 'Customer' %></td>
+            <td>#<%= order.branchNo %></td>
+            <td><span class="status-badge status-<%= order.status %>"><%= statusLabel(order.status) %></span></td>
+            <td><%= formatMoney(order.totalAmount) %></td>
+            <td><%= formatDateTime(order.createdAt) %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</main>
+<%- include('../partials/footer') %>

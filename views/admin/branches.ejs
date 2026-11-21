@@ -1,0 +1,108 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/nav') %>
+<main class="container page-shell">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Restaurant footprint</p>
+      <h1>Branches</h1>
+      <p>Manage address, hours, rest days, and reservation capacity.</p>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#newBranch" type="button">Add branch</button>
+  </div>
+  <%- include('../partials/flash') %>
+
+  <section class="collapse mb-4" id="newBranch">
+    <div class="surface-card">
+      <p class="eyebrow">New location</p>
+      <form action="/admin/branches" method="post" class="vstack gap-3">
+        <div class="row g-3">
+          <div class="col-md-2">
+            <label class="form-label">Branch no.</label>
+            <input class="form-control" name="branchNo" type="number" min="1" required>
+          </div>
+          <div class="col-md-5">
+            <label class="form-label">Name</label>
+            <input class="form-control" name="name" maxlength="80" required>
+          </div>
+          <div class="col-md-5">
+            <label class="form-label">Address</label>
+            <input class="form-control" name="address" maxlength="160" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Opens</label>
+            <input class="form-control" name="openTime" type="time" value="09:00" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Closes</label>
+            <input class="form-control" name="closeTime" type="time" value="22:00" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Rest day</label>
+            <select class="form-select" name="restDay">
+              <% ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].forEach((day) => { %><option><%= day %></option><% }) %>
+            </select>
+          </div>
+          <div class="col-md-3 d-flex align-items-end">
+            <div class="form-check mb-2"><input class="form-check-input" name="active" type="checkbox" checked><label class="form-check-label">Active</label></div>
+          </div>
+        </div>
+        <div>
+          <label class="form-label">Booking slots</label>
+          <textarea class="form-control font-monospace" name="slots" rows="5" required>09:00-11:00|20
+11:00-13:00|20
+13:00-15:00|20
+15:00-17:00|20
+17:00-19:00|20
+19:00-21:00|20</textarea>
+          <div class="form-text">One period per line: start-end|seat capacity.</div>
+        </div>
+        <button class="btn btn-primary align-self-start" type="submit">Create branch</button>
+      </form>
+    </div>
+  </section>
+
+  <div class="vstack gap-3">
+    <% branches.forEach((branch) => { %>
+      <article class="surface-card">
+        <div class="section-title">
+          <div>
+            <p class="eyebrow">Branch #<%= branch.branchNo %></p>
+            <h2><%= branch.name %></h2>
+            <span class="text-muted"><%= branch.address %></span>
+          </div>
+          <span class="status-badge <%= branch.active ? 'status-confirmed' : 'status-cancelled' %>"><%= branch.active ? 'Active' : 'Disabled' %></span>
+        </div>
+        <div class="collapse" id="branch-<%= branch._id %>">
+          <form action="/admin/branches/<%= branch._id %>" method="post" class="vstack gap-3 border-top pt-3">
+            <div class="row g-3">
+              <div class="col-md-2"><label class="form-label">Branch no.</label><input class="form-control" name="branchNo" type="number" value="<%= branch.branchNo %>" required></div>
+              <div class="col-md-5"><label class="form-label">Name</label><input class="form-control" name="name" value="<%= branch.name %>" required></div>
+              <div class="col-md-5"><label class="form-label">Address</label><input class="form-control" name="address" value="<%= branch.address %>" required></div>
+              <div class="col-md-3"><label class="form-label">Opens</label><input class="form-control" name="openTime" type="time" value="<%= branch.openTime %>" required></div>
+              <div class="col-md-3"><label class="form-label">Closes</label><input class="form-control" name="closeTime" type="time" value="<%= branch.closeTime %>" required></div>
+              <div class="col-md-3">
+                <label class="form-label">Rest day</label>
+                <select class="form-select" name="restDay">
+                  <% ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].forEach((day) => { %><option <%= branch.restDay === day ? 'selected' : '' %>><%= day %></option><% }) %>
+                </select>
+              </div>
+              <div class="col-md-3 d-flex align-items-end"><div class="form-check mb-2"><input class="form-check-input" name="active" type="checkbox" <%= branch.active ? 'checked' : '' %>><label class="form-check-label">Active</label></div></div>
+            </div>
+            <div>
+              <label class="form-label">Booking slots</label>
+              <textarea class="form-control font-monospace" name="slots" rows="5" required><%= branch.bookingSlots.map((slot) => `${slot.startTime}-${slot.endTime}|${slot.capacity}`).join('\n') %></textarea>
+            </div>
+            <div class="d-flex justify-content-between gap-2">
+              <button class="btn btn-primary" type="submit">Save branch</button>
+          </form>
+              <form action="/admin/branches/<%= branch._id %>/delete" method="post" data-confirm="Delete this branch? Branches with related records cannot be deleted.">
+                <button class="btn btn-outline-danger" type="submit">Delete</button>
+              </form>
+            </div>
+        </div>
+        <button class="btn btn-sm btn-outline-dark mt-3" data-bs-toggle="collapse" data-bs-target="#branch-<%= branch._id %>" type="button">Edit details & slots</button>
+      </article>
+    <% }) %>
+  </div>
+</main>
+<%- include('../partials/footer') %>

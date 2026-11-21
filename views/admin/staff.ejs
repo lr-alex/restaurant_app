@@ -1,0 +1,67 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/nav') %>
+<main class="container page-shell">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">People operations</p>
+      <h1>Staff directory</h1>
+      <p>Staff profiles and login accounts stay linked but separate.</p>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#newStaff" type="button">Add staff</button>
+  </div>
+  <%- include('../partials/flash') %>
+
+  <section class="collapse mb-4" id="newStaff">
+    <div class="surface-card">
+      <p class="eyebrow">Profile + login</p>
+      <form action="/admin/staff" method="post" class="vstack gap-3">
+        <div class="row g-3">
+          <div class="col-md-4"><label class="form-label">Full name</label><input class="form-control" name="name" required></div>
+          <div class="col-md-4"><label class="form-label">Branch</label><select class="form-select" name="branchNo"><% branches.forEach((branch) => { %><option value="<%= branch.branchNo %>">#<%= branch.branchNo %> · <%= branch.name %></option><% }) %></select></div>
+          <div class="col-md-4"><label class="form-label">Job title</label><select class="form-select" name="roleTitle"><option value="chef">Chef</option><option value="waiter">Waiter</option><option value="manager">Manager</option></select></div>
+          <div class="col-md-4"><label class="form-label">Username</label><input class="form-control" name="username" pattern="[a-z0-9._-]{3,40}" required></div>
+          <div class="col-md-4"><label class="form-label">Initial password</label><input class="form-control" name="password" type="password" minlength="6" required></div>
+          <div class="col-md-4"><label class="form-label">Working period</label><select class="form-select" name="workingPeriod"><option value="day">Day</option><option value="night">Night</option><option value="flexible">Flexible</option></select></div>
+          <div class="col-md-4"><label class="form-label">Date of birth</label><input class="form-control" name="dateOfBirth" type="date"></div>
+          <div class="col-md-8"><label class="form-label">Address</label><input class="form-control" name="address" maxlength="160"></div>
+          <div class="col-md-4"><label class="form-label">Salary</label><input class="form-control" name="salary" type="number" min="0" step="0.01" value="0"></div>
+        </div>
+        <button class="btn btn-primary align-self-start" type="submit">Create staff login</button>
+      </form>
+    </div>
+  </section>
+
+  <div class="row g-3">
+    <% staff.forEach((member) => { const account = accountByProfile.get(member._id.toString()); %>
+      <div class="col-md-6 col-xl-4">
+        <article class="person-card h-100">
+          <div class="person-head">
+            <div class="avatar"><%= member.name.split(/\s+/).map((word) => word[0]).join('').slice(0, 2).toUpperCase() %></div>
+            <div><span class="eyebrow">Branch #<%= member.branchNo %></span><h2><%= member.name %></h2><span class="text-muted"><%= statusLabel(member.roleTitle) %></span></div>
+          </div>
+          <dl class="detail-grid compact-grid">
+            <div><dt>Login</dt><dd><%= account ? account.username : 'No account' %></dd></div>
+            <div><dt>Period</dt><dd><%= statusLabel(member.workingPeriod) %></dd></div>
+            <div><dt>Salary</dt><dd><%= formatMoney(member.salary) %></dd></div>
+            <div><dt>Status</dt><dd><%= member.active ? 'Active' : 'Disabled' %></dd></div>
+          </dl>
+          <button class="btn btn-sm btn-outline-dark" data-bs-toggle="collapse" data-bs-target="#staff-<%= member._id %>" type="button">Edit profile</button>
+          <div class="collapse mt-3" id="staff-<%= member._id %>">
+            <form action="/admin/staff/<%= member._id %>" method="post" class="vstack gap-2 border-top pt-3">
+              <input class="form-control" name="name" value="<%= member.name %>" required>
+              <select class="form-select" name="branchNo"><% branches.forEach((branch) => { %><option value="<%= branch.branchNo %>" <%= member.branchNo === branch.branchNo ? 'selected' : '' %>>#<%= branch.branchNo %> · <%= branch.name %></option><% }) %></select>
+              <select class="form-select" name="roleTitle"><% ['chef', 'waiter', 'manager'].forEach((role) => { %><option value="<%= role %>" <%= member.roleTitle === role ? 'selected' : '' %>><%= statusLabel(role) %></option><% }) %></select>
+              <select class="form-select" name="workingPeriod"><% ['day', 'night', 'flexible'].forEach((period) => { %><option value="<%= period %>" <%= member.workingPeriod === period ? 'selected' : '' %>><%= statusLabel(period) %></option><% }) %></select>
+              <input class="form-control" name="dateOfBirth" type="date" value="<%= member.dateOfBirth %>">
+              <input class="form-control" name="address" value="<%= member.address %>" placeholder="Address">
+              <input class="form-control" name="salary" type="number" min="0" step="0.01" value="<%= member.salary %>">
+              <div class="form-check"><input class="form-check-input" name="active" type="checkbox" <%= member.active ? 'checked' : '' %>><label class="form-check-label">Account active</label></div>
+              <button class="btn btn-sm btn-primary" type="submit">Save</button>
+            </form>
+          </div>
+        </article>
+      </div>
+    <% }) %>
+  </div>
+</main>
+<%- include('../partials/footer') %>

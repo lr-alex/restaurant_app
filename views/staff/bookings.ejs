@@ -1,0 +1,47 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/nav') %>
+<main class="container page-shell">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Branch #<%= currentProfile.branchNo %></p>
+      <h1>Reservation book</h1>
+      <p>Confirm or cancel the upcoming tables for this branch.</p>
+    </div>
+  </div>
+  <%- include('../partials/flash') %>
+  <div class="surface-card table-responsive">
+    <table class="table align-middle mb-0">
+      <thead>
+        <tr><th>Guest</th><th>Date</th><th>Time</th><th>Party</th><th>Status</th><th>Update</th></tr>
+      </thead>
+      <tbody>
+        <% if (!bookings.length) { %>
+          <tr><td colspan="6" class="text-center text-muted py-5">No reservations for this branch.</td></tr>
+        <% } %>
+        <% bookings.forEach((booking) => { %>
+          <tr>
+            <td>
+              <strong><%= booking.customer ? booking.customer.name : 'Guest' %></strong>
+              <div class="small text-muted"><%= booking.customer ? booking.customer.phone : '' %></div>
+            </td>
+            <td><%= formatDate(booking.bookingDate) %></td>
+            <td><%= booking.slotStart %>–<%= booking.slotEnd %></td>
+            <td><%= booking.partySize %></td>
+            <td><span class="status-badge status-<%= booking.status %>"><%= statusLabel(booking.status) %></span></td>
+            <td>
+              <form action="/staff/bookings/<%= booking._id %>/status" method="post" class="d-flex gap-2">
+                <select class="form-select form-select-sm" name="status" aria-label="Booking status">
+                  <% ['pending', 'confirmed', 'cancelled', 'completed'].forEach((status) => { %>
+                    <option value="<%= status %>" <%= booking.status === status ? 'selected' : '' %>><%= statusLabel(status) %></option>
+                  <% }) %>
+                </select>
+                <button class="btn btn-sm btn-dark" type="submit">Set</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</main>
+<%- include('../partials/footer') %>

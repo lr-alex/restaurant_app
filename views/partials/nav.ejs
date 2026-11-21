@@ -1,0 +1,53 @@
+<nav class="navbar navbar-expand-lg navbar-dark site-nav">
+  <div class="container">
+    <a class="navbar-brand brand-mark" href="<%= homePath %>">
+      <span class="brand-spice">S</span>
+      <span>Saffron <span class="brand-amp">&</span> Stone</span>
+    </a>
+    <% if (currentUser) { %>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#siteNavigation" aria-controls="siteNavigation" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="siteNavigation">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <% if (currentUser.role === 'customer') { %>
+            <li class="nav-item"><a class="nav-link <%= currentPath === '/customer/bookings' ? 'active' : '' %>" href="/customer/bookings">Reservations</a></li>
+            <li class="nav-item"><a class="nav-link <%= currentPath === '/customer/menu' ? 'active' : '' %>" href="/customer/menu">Menu</a></li>
+            <li class="nav-item"><a class="nav-link <%= currentPath === '/customer/orders' ? 'active' : '' %>" href="/customer/orders">Orders</a></li>
+            <li class="nav-item"><a class="nav-link <%= currentPath === '/customer/profile' ? 'active' : '' %>" href="/customer/profile">Profile</a></li>
+          <% } else if (currentUser.role === 'staff') { %>
+            <li class="nav-item"><a class="nav-link <%= currentPath === '/staff/dashboard' ? 'active' : '' %>" href="/staff/dashboard">Kitchen</a></li>
+            <li class="nav-item"><a class="nav-link <%= currentPath === '/staff/bookings' ? 'active' : '' %>" href="/staff/bookings">Reservations</a></li>
+            <li class="nav-item"><a class="nav-link <%= currentPath === '/staff/menu' ? 'active' : '' %>" href="/staff/menu">Menu</a></li>
+            <li class="nav-item"><a class="nav-link <%= currentPath === '/staff/schedule' ? 'active' : '' %>" href="/staff/schedule">My schedule</a></li>
+          <% } else { %>
+            <li class="nav-item"><a class="nav-link <%= currentPath === '/admin/dashboard' ? 'active' : '' %>" href="/admin/dashboard">Overview</a></li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Restaurant</a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="/admin/branches">Branches</a></li>
+                <li><a class="dropdown-item" href="/admin/meals">Meals</a></li>
+                <li><a class="dropdown-item" href="/admin/suppliers">Suppliers</a></li>
+                <li><a class="dropdown-item" href="/admin/batches">Supply batches</a></li>
+              </ul>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">People</a>
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="/admin/staff">Staff</a></li>
+                <li><a class="dropdown-item" href="/admin/shifts">Scheduling</a></li>
+              </ul>
+            </li>
+          <% } %>
+        </ul>
+        <div class="d-flex align-items-lg-center gap-2 nav-account">
+          <span class="small text-white-50"><%= currentProfile.name %> · <%= statusLabel(currentUser.role) %></span>
+          <a class="btn btn-sm btn-outline-light" href="/account/password">Password</a>
+          <form action="/logout" method="post" class="m-0">
+            <button class="btn btn-sm btn-light" type="submit">Sign out</button>
+          </form>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</nav>

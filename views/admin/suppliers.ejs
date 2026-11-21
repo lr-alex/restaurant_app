@@ -1,0 +1,50 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/nav') %>
+<main class="container page-shell">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Sourcing</p>
+      <h1>Suppliers</h1>
+      <p>Core contacts and descriptions for the restaurant's supplier network.</p>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#newSupplier" type="button">Add supplier</button>
+  </div>
+  <%- include('../partials/flash') %>
+  <section class="collapse mb-4" id="newSupplier">
+    <div class="surface-card">
+      <form action="/admin/suppliers" method="post" class="vstack gap-3">
+        <div class="row g-3">
+          <div class="col-md-5"><label class="form-label">Supplier name</label><input class="form-control" name="name" required></div>
+          <div class="col-md-7"><label class="form-label">Contact information</label><input class="form-control" name="contactInfo" required></div>
+        </div>
+        <div><label class="form-label">Description</label><textarea class="form-control" name="description" rows="2"></textarea></div>
+        <button class="btn btn-primary align-self-start" type="submit">Create supplier</button>
+      </form>
+    </div>
+  </section>
+  <div class="vstack gap-3">
+    <% suppliers.forEach((supplier) => { %>
+      <article class="surface-card">
+        <div class="section-title">
+          <div><p class="eyebrow"><%= supplier.supplierCode %></p><h2><%= supplier.name %></h2><span class="text-muted"><%= supplier.contactInfo %></span></div>
+          <span class="status-badge <%= supplier.active ? 'status-confirmed' : 'status-cancelled' %>"><%= supplier.active ? 'Active' : 'Disabled' %></span>
+        </div>
+        <p><%= supplier.description %></p>
+        <button class="btn btn-sm btn-outline-dark" data-bs-toggle="collapse" data-bs-target="#supplier-<%= supplier._id %>" type="button">Edit</button>
+        <div class="collapse mt-3" id="supplier-<%= supplier._id %>">
+          <form action="/admin/suppliers/<%= supplier._id %>" method="post" class="vstack gap-2 border-top pt-3">
+            <input class="form-control" name="name" value="<%= supplier.name %>" required>
+            <input class="form-control" name="contactInfo" value="<%= supplier.contactInfo %>" required>
+            <textarea class="form-control" name="description" rows="2"><%= supplier.description %></textarea>
+            <div class="form-check"><input class="form-check-input" name="active" type="checkbox" <%= supplier.active ? 'checked' : '' %>><label class="form-check-label">Active</label></div>
+            <button class="btn btn-sm btn-primary align-self-start" type="submit">Save</button>
+          </form>
+          <form action="/admin/suppliers/<%= supplier._id %>/delete" method="post" class="mt-2" data-confirm="Delete or disable this supplier?">
+            <button class="btn btn-sm btn-outline-danger" type="submit">Delete / disable</button>
+          </form>
+        </div>
+      </article>
+    <% }) %>
+  </div>
+</main>
+<%- include('../partials/footer') %>

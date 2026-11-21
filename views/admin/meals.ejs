@@ -1,0 +1,58 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/nav') %>
+<main class="container page-shell">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Kitchen catalog</p>
+      <h1>Meals</h1>
+      <p>Text-only menu cards are grouped by category and controlled here.</p>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#newMeal" type="button">Add meal</button>
+  </div>
+  <%- include('../partials/flash') %>
+
+  <section class="collapse mb-4" id="newMeal">
+    <div class="surface-card">
+      <form action="/admin/meals" method="post" class="vstack gap-3">
+        <div class="row g-3">
+          <div class="col-md-5"><label class="form-label">Meal name</label><input class="form-control" name="name" required></div>
+          <div class="col-md-3"><label class="form-label">Category</label><input class="form-control" name="category" placeholder="Pasta" required></div>
+          <div class="col-md-2"><label class="form-label">Price</label><input class="form-control" name="price" type="number" step="0.01" min="0" required></div>
+          <div class="col-md-2 d-flex align-items-end"><div class="form-check mb-2"><input class="form-check-input" name="isAvailable" type="checkbox" checked><label class="form-check-label">Available</label></div></div>
+        </div>
+        <div><label class="form-label">Description</label><textarea class="form-control" name="description" rows="2" maxlength="500"></textarea></div>
+        <button class="btn btn-primary align-self-start" type="submit">Create meal</button>
+      </form>
+    </div>
+  </section>
+
+  <div class="row g-3">
+    <% meals.forEach((meal) => { %>
+      <div class="col-md-6 col-xl-4">
+        <article class="meal-card h-100">
+          <div class="d-flex justify-content-between gap-2">
+            <div><span class="meal-category"><%= meal.category %></span><h3><%= meal.name %></h3></div>
+            <span class="status-badge <%= meal.isAvailable ? 'status-ready' : 'status-cancelled' %>"><%= meal.isAvailable ? 'Available' : 'Unavailable' %></span>
+          </div>
+          <p><%= meal.description %></p>
+          <div class="d-flex justify-content-between align-items-center mb-3"><strong><%= formatMoney(meal.price) %></strong><code><%= meal.mealCode %></code></div>
+          <button class="btn btn-sm btn-outline-dark" data-bs-toggle="collapse" data-bs-target="#meal-<%= meal._id %>" type="button">Edit</button>
+          <div class="collapse mt-3" id="meal-<%= meal._id %>">
+            <form action="/admin/meals/<%= meal._id %>" method="post" class="vstack gap-2 border-top pt-3">
+              <input class="form-control" name="name" value="<%= meal.name %>" required>
+              <input class="form-control" name="category" value="<%= meal.category %>" required>
+              <input class="form-control" name="price" type="number" min="0" step="0.01" value="<%= meal.price %>" required>
+              <textarea class="form-control" name="description" rows="2"><%= meal.description %></textarea>
+              <div class="form-check"><input class="form-check-input" name="isAvailable" type="checkbox" <%= meal.isAvailable ? 'checked' : '' %>><label class="form-check-label">Available</label></div>
+              <button class="btn btn-sm btn-primary" type="submit">Save</button>
+            </form>
+            <form action="/admin/meals/<%= meal._id %>/delete" method="post" class="mt-2" data-confirm="Delete or disable this meal?">
+              <button class="btn btn-sm btn-outline-danger" type="submit">Delete / disable</button>
+            </form>
+          </div>
+        </article>
+      </div>
+    <% }) %>
+  </div>
+</main>
+<%- include('../partials/footer') %>

@@ -1,0 +1,45 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/nav') %>
+<main class="container page-shell">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Weekly operations</p>
+      <h1>Staff scheduling</h1>
+      <p>Create explicit shifts. Day or night preference remains part of the staff profile.</p>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#newShift" type="button">Add shift</button>
+  </div>
+  <%- include('../partials/flash') %>
+  <section class="collapse mb-4" id="newShift">
+    <div class="surface-card">
+      <form action="/admin/shifts" method="post" class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label">Staff member</label>
+          <select class="form-select" name="staffId" required><% staff.forEach((member) => { %><option value="<%= member._id %>"><%= member.name %> · Branch #<%= member.branchNo %></option><% }) %></select>
+        </div>
+        <div class="col-md-3"><label class="form-label">Date</label><input class="form-control" name="shiftDate" type="date" min="<%= today %>" value="<%= today %>" required></div>
+        <div class="col-md-2"><label class="form-label">Starts</label><input class="form-control" name="startTime" type="time" value="09:00" required></div>
+        <div class="col-md-2"><label class="form-label">Ends</label><input class="form-control" name="endTime" type="time" value="17:00" required></div>
+        <div class="col-md-1"><button class="btn btn-primary w-100" type="submit">Add</button></div>
+      </form>
+    </div>
+  </section>
+  <div class="surface-card table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th>Date</th><th>Shift</th><th>Staff</th><th>Branch</th><th></th></tr></thead>
+      <tbody>
+        <% if (!shifts.length) { %><tr><td colspan="5" class="text-center text-muted py-5">No shifts have been scheduled.</td></tr><% } %>
+        <% shifts.forEach((shift) => { %>
+          <tr>
+            <td><%= formatDate(shift.shiftDate) %></td>
+            <td><%= shift.startTime %>–<%= shift.endTime %></td>
+            <td><%= shift.staff ? shift.staff.name : 'Removed staff' %></td>
+            <td>#<%= shift.branchNo %></td>
+            <td class="text-end"><form action="/admin/shifts/<%= shift._id %>/delete" method="post" data-confirm="Remove this shift?"><button class="btn btn-sm btn-outline-danger" type="submit">Delete</button></form></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</main>
+<%- include('../partials/footer') %>

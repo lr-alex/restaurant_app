@@ -1,0 +1,46 @@
+<%- include('../partials/head', { title }) %>
+<%- include('../partials/nav') %>
+<main class="container page-shell">
+  <div class="page-heading">
+    <div>
+      <p class="eyebrow">Incoming goods</p>
+      <h1>Supply batches</h1>
+      <p>A lightweight delivery log, intentionally outside the inventory system.</p>
+    </div>
+    <button class="btn btn-primary" data-bs-toggle="collapse" data-bs-target="#newBatch" type="button">Add batch</button>
+  </div>
+  <%- include('../partials/flash') %>
+  <section class="collapse mb-4" id="newBatch">
+    <div class="surface-card">
+      <form action="/admin/batches" method="post" class="row g-3 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label">Supplier</label>
+          <select class="form-select" name="supplierId" required><% suppliers.forEach((supplier) => { %><option value="<%= supplier._id %>"><%= supplier.name %></option><% }) %></select>
+        </div>
+        <div class="col-md-2"><label class="form-label">Branch</label><select class="form-select" name="branchNo"><% branches.forEach((branch) => { %><option value="<%= branch.branchNo %>">#<%= branch.branchNo %></option><% }) %></select></div>
+        <div class="col-md-3"><label class="form-label">Item</label><input class="form-control" name="itemName" required></div>
+        <div class="col-md-2"><label class="form-label">Received</label><input class="form-control" name="receivedDate" type="date" value="<%= today %>" required></div>
+        <div class="col-md-1"><button class="btn btn-primary w-100" type="submit">Add</button></div>
+      </form>
+    </div>
+  </section>
+  <div class="surface-card table-responsive">
+    <table class="table align-middle mb-0">
+      <thead><tr><th>Batch</th><th>Item</th><th>Supplier</th><th>Branch</th><th>Received</th><th></th></tr></thead>
+      <tbody>
+        <% if (!batches.length) { %><tr><td colspan="6" class="text-center text-muted py-5">No supply batches recorded.</td></tr><% } %>
+        <% batches.forEach((batch) => { %>
+          <tr>
+            <td><code><%= batch.batchCode %></code></td>
+            <td><strong><%= batch.itemName %></strong></td>
+            <td><%= batch.supplier ? batch.supplier.name : 'Unknown supplier' %></td>
+            <td>#<%= batch.branchNo %></td>
+            <td><%= formatDate(batch.receivedDate) %></td>
+            <td class="text-end"><form action="/admin/batches/<%= batch._id %>/delete" method="post" data-confirm="Delete this supply batch?"><button class="btn btn-sm btn-outline-danger" type="submit">Delete</button></form></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</main>
+<%- include('../partials/footer') %>
