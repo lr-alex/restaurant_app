@@ -17,7 +17,7 @@ All user-facing application text is in English.
    npm install
    ```
 
-2. Copy `.env.example` to `.env` and set:
+2. Confirm the shared `.env` configuration is present:
 
    ```text
    PORT=8099
@@ -26,7 +26,7 @@ All user-facing application text is in English.
    NODE_ENV=development
    ```
 
-   The checked-in project already has a local `.env` for the supplied course Atlas account. It is ignored by Git.
+   The `.env` file is tracked with the shared course Atlas configuration so collaborators can run the same demo.
 
 3. Reset and seed the project collections:
 
