@@ -295,10 +295,22 @@ async function resetDemoData() {
       profileId: customers[0]._id
     },
     {
+      username: 'customer2',
+      password: 'Customer2@123',
+      role: 'customer',
+      profileId: customers[1]._id
+    },
+    {
       username: 'staff1',
       password: 'Staff@123',
       role: 'staff',
       profileId: staff[1]._id
+    },
+    {
+      username: 'staff2',
+      password: 'Staff2@123',
+      role: 'staff',
+      profileId: staff[2]._id
     },
     {
       username: 'admin1',
@@ -437,7 +449,7 @@ async function resetDemoData() {
   ]);
 
   console.log('Demo reset complete.');
-  console.log('Accounts: customer1, staff1, admin1');
+  console.log('Accounts: customer1, customer2, staff1, staff2, admin1');
   console.log('Database restored to the pre-CRUD demo baseline.');
 }
 

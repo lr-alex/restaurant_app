@@ -48,11 +48,13 @@ All user-facing application text is in English.
 
 | Role | Username | Password | Scope |
 |---|---|---|---|
-| Customer | `customer1` | `Customer@123` | Own reservations, orders, profile, and favorites |
-| Staff | `staff1` | `Staff@123` | Branch 1 orders, reservations, menu, and own schedule |
+| Customer 1 | `customer1` | `Customer@123` | Bob's reservations, orders, profile, and favorites |
+| Customer 2 | `customer2` | `Customer2@123` | Sarah's reservations, orders, profile, and favorites |
+| Staff 1 | `staff1` | `Staff@123` | Branch 1 orders, reservations, menu, and own schedule |
+| Staff 2 | `staff2` | `Staff2@123` | Branch 2 orders, reservations, menu, and own schedule |
 | Admin | `admin1` | `Admin@123` | Global restaurant configuration |
 
-In development, `/login` also provides one-click Customer, Staff, and Admin buttons. They use the same seeded accounts and are disabled when `NODE_ENV=production`.
+In development, `/login` also provides one-click Customer 1, Customer 2, Staff 1, Staff 2, and Admin buttons. They use the same seeded accounts and are disabled when `NODE_ENV=production`.
 
 Password storage is plaintext in `accounts.password`, per the project's explicit course-demo requirement. Passwords are excluded from API responses by default, but this storage design must not be used in production.
 

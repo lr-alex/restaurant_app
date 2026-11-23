@@ -8,9 +8,19 @@ const { setFlash } = require('../middleware/flash');
 const router = express.Router();
 
 const demoAccounts = {
-  customer: { username: 'customer1', password: 'Customer@123' },
-  staff: { username: 'staff1', password: 'Staff@123' },
-  admin: { username: 'admin1', password: 'Admin@123' }
+  customer: {
+    username: 'customer1',
+    password: 'Customer@123',
+    role: 'customer'
+  },
+  customer2: {
+    username: 'customer2',
+    password: 'Customer2@123',
+    role: 'customer'
+  },
+  staff: { username: 'staff1', password: 'Staff@123', role: 'staff' },
+  staff2: { username: 'staff2', password: 'Staff2@123', role: 'staff' },
+  admin: { username: 'admin1', password: 'Admin@123', role: 'admin' }
 };
 
 function homeForRole(role) {
@@ -88,7 +98,7 @@ router.post(
       demoAccount.username,
       demoAccount.password
     );
-    if (!account || account.role !== req.params.role) {
+    if (!account || account.role !== demoAccount.role) {
       setFlash(
         req,
         'danger',
