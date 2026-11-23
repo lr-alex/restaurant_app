@@ -28,10 +28,10 @@ All user-facing application text is in English.
 
    The `.env` file is tracked with the shared course Atlas configuration so collaborators can run the same demo.
 
-3. Reset and seed the project collections:
+3. Reset the database to the pre-CRUD demo baseline:
 
    ```powershell
-   npm run seed
+   npm run reset
    ```
 
    This removes only Saffron & Stone records from the collections listed in [Database model](#database-model). It also clears the legacy `booking_schedule` and `order_items` sample collections.
@@ -91,7 +91,7 @@ Run the database-independent tests:
 npm test
 ```
 
-The API contract, role rules, request examples, and `curl` commands are documented in [docs/API.md](docs/API.md).
+The API contract, role rules, request examples, and `curl` commands are documented in [docs/API.md](docs/API.md). The timed staff presentation walkthrough is in [docs/STAFF_DEMO_2_5_MIN.md](docs/STAFF_DEMO_2_5_MIN.md).
 
 ## Technology notes
 

@@ -92,7 +92,7 @@ router.post(
       setFlash(
         req,
         'danger',
-        'This demo account is unavailable. Run npm run seed and try again.'
+        'This demo account is unavailable. Run npm run reset and try again.'
       );
       return res.redirect('/login');
     }

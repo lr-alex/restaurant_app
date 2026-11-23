@@ -66,7 +66,7 @@ function orderItem(meal, quantity) {
   };
 }
 
-async function seed() {
+async function resetDemoData() {
   await connectDatabase();
   await clearProjectCollections();
   await Promise.all(models.map((Model) => Model.syncIndexes()));
@@ -341,7 +341,8 @@ async function seed() {
       customer: customers[0]._id,
       branchNo: 1,
       items: [carbonara, pizza],
-      totalAmount: carbonara.subtotal + pizza.subtotal,
+      totalAmount:
+        Math.round((carbonara.subtotal + pizza.subtotal) * 100) / 100,
       status: 'preparing'
     },
     {
@@ -435,13 +436,14 @@ async function seed() {
     }
   ]);
 
-  console.log('Seed complete.');
+  console.log('Demo reset complete.');
   console.log('Accounts: customer1, staff1, admin1');
+  console.log('Database restored to the pre-CRUD demo baseline.');
 }
 
-seed()
+resetDemoData()
   .catch((error) => {
-    console.error('Seed failed:', error);
+    console.error('Demo reset failed:', error);
     process.exitCode = 1;
   })
   .finally(async () => {
