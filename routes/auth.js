@@ -7,22 +7,6 @@ const { setFlash } = require('../middleware/flash');
 
 const router = express.Router();
 
-const demoAccounts = {
-  customer: {
-    username: 'customer1',
-    password: 'Customer@123',
-    role: 'customer'
-  },
-  customer2: {
-    username: 'customer2',
-    password: 'Customer2@123',
-    role: 'customer'
-  },
-  staff: { username: 'staff1', password: 'Staff@123', role: 'staff' },
-  staff2: { username: 'staff2', password: 'Staff2@123', role: 'staff' },
-  admin: { username: 'admin1', password: 'Admin@123', role: 'admin' }
-};
-
 function homeForRole(role) {
   if (role === 'customer') {
     return '/customer/bookings';
@@ -66,44 +50,6 @@ router.post(
 
     if (!account) {
       setFlash(req, 'danger', 'Incorrect username or password.');
-      return res.redirect('/login');
-    }
-
-    startSession(req, account);
-    return res.redirect(homeForRole(account.role));
-  })
-);
-
-router.post(
-  '/login/demo/:role',
-  asyncRoute(async (req, res) => {
-    if (env.nodeEnv === 'production') {
-      return res.status(404).render('error', {
-        title: 'Page not found',
-        status: 404,
-        message: 'The page you requested does not exist.'
-      });
-    }
-
-    const demoAccount = demoAccounts[req.params.role];
-    if (!demoAccount) {
-      return res.status(404).render('error', {
-        title: 'Page not found',
-        status: 404,
-        message: 'Unknown demo account.'
-      });
-    }
-
-    const account = await findAuthenticatedAccount(
-      demoAccount.username,
-      demoAccount.password
-    );
-    if (!account || account.role !== demoAccount.role) {
-      setFlash(
-        req,
-        'danger',
-        'This demo account is unavailable. Run npm run reset and try again.'
-      );
       return res.redirect('/login');
     }
 

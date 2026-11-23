@@ -323,7 +323,7 @@ async function resetDemoData() {
   const branchOne = branches[0];
   const branchTwo = branches[1];
   const firstBookingDate = nextOpenDate(3, branchOne.restDay);
-  const secondBookingDate = nextOpenDate(5, branchTwo.restDay);
+  const secondBookingDate = nextOpenDate(5, branchOne.restDay);
   await Booking.create([
     {
       customer: customers[0]._id,
@@ -337,10 +337,10 @@ async function resetDemoData() {
     },
     {
       customer: customers[1]._id,
-      branchNo: branchTwo.branchNo,
+      branchNo: branchOne.branchNo,
       bookingDate: secondBookingDate,
-      slotStart: '18:00',
-      slotEnd: '20:00',
+      slotStart: '17:00',
+      slotEnd: '19:00',
       partySize: 2,
       status: 'pending'
     }
@@ -359,7 +359,7 @@ async function resetDemoData() {
     },
     {
       customer: customers[1]._id,
-      branchNo: 2,
+      branchNo: 1,
       items: [orderItem(meals[4], 1), orderItem(meals[7], 2)],
       totalAmount: 27.75,
       status: 'placed'

@@ -13,31 +13,41 @@
           <p class="demo-help">Skip the form and open a prepared role workspace.</p>
           <div class="demo-account">
             <div><strong>Customer 1</strong><code>customer1</code></div>
-            <form action="/login/demo/customer" method="post">
+            <form action="/login" method="post">
+              <input type="hidden" name="username" value="customer1">
+              <input type="hidden" name="password" value="Customer@123">
               <button class="btn btn-sm btn-dark" type="submit">Open Customer 1</button>
             </form>
           </div>
           <div class="demo-account">
             <div><strong>Customer 2</strong><code>customer2</code></div>
-            <form action="/login/demo/customer2" method="post">
+            <form action="/login" method="post">
+              <input type="hidden" name="username" value="customer2">
+              <input type="hidden" name="password" value="Customer2@123">
               <button class="btn btn-sm btn-dark" type="submit">Open Customer 2</button>
             </form>
           </div>
           <div class="demo-account">
             <div><strong>Staff 1</strong><code>staff1 · Branch 1</code></div>
-            <form action="/login/demo/staff" method="post">
+            <form action="/login" method="post">
+              <input type="hidden" name="username" value="staff1">
+              <input type="hidden" name="password" value="Staff@123">
               <button class="btn btn-sm btn-dark" type="submit">Open Staff 1</button>
             </form>
           </div>
           <div class="demo-account">
             <div><strong>Staff 2</strong><code>staff2 · Branch 2</code></div>
-            <form action="/login/demo/staff2" method="post">
+            <form action="/login" method="post">
+              <input type="hidden" name="username" value="staff2">
+              <input type="hidden" name="password" value="Staff2@123">
               <button class="btn btn-sm btn-dark" type="submit">Open Staff 2</button>
             </form>
           </div>
           <div class="demo-account">
             <div><strong>Admin</strong><code>admin1</code></div>
-            <form action="/login/demo/admin" method="post">
+            <form action="/login" method="post">
+              <input type="hidden" name="username" value="admin1">
+              <input type="hidden" name="password" value="Admin@123">
               <button class="btn btn-sm btn-dark" type="submit">Open Admin</button>
             </form>
           </div>
