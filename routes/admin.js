@@ -70,6 +70,10 @@ function readBranch(body) {
   if (!['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].includes(body.restDay)) {
     throw new AppError(400, 'Select a valid rest day.');
   }
+  const operatingStatus = String(body.operatingStatus || '');
+  if (!['active', 'resting', 'disabled'].includes(operatingStatus)) {
+    throw new AppError(400, 'Select an operating status.');
+  }
   return {
     branchNo,
     name: String(body.name || '').trim(),
@@ -78,8 +82,7 @@ function readBranch(body) {
     closeTime,
     restDay: body.restDay,
     bookingSlots,
-    isResting: body.isResting === 'on' || body.isResting === 'true',
-    active: body.active === 'on' || body.active === 'true'
+    operatingStatus
   };
 }
 
@@ -94,7 +97,7 @@ router.get(
       activeOrderCount,
       recentOrders
     ] = await Promise.all([
-      Branch.countDocuments({ active: true }),
+      Branch.countDocuments({ operatingStatus: { $ne: 'disabled' } }),
       Meal.countDocuments({ isAvailable: true }),
       Staff.countDocuments({ active: true }),
       Booking.countDocuments({ status: 'pending' }),
@@ -270,7 +273,7 @@ router.get(
   asyncRoute(async (_req, res) => {
     const [staff, branches, accounts] = await Promise.all([
       Staff.find().sort({ branchNo: 1, name: 1 }),
-      Branch.find({ active: true }).sort({ branchNo: 1 }),
+      Branch.find({ operatingStatus: { $ne: 'disabled' } }).sort({ branchNo: 1 }),
       Account.find({ role: { $in: ['staff', 'admin'] } })
     ]);
     const accountByProfile = new Map(
@@ -297,7 +300,7 @@ router.post(
     if (password.length < 6) {
       throw new AppError(400, 'Password must contain at least 6 characters.');
     }
-    if (!(await Branch.exists({ branchNo, active: true }))) {
+    if (!(await Branch.exists({ branchNo, operatingStatus: { $ne: 'disabled' } }))) {
       throw new AppError(400, 'Select an active branch.');
     }
     if (await Account.exists({ username })) {
@@ -340,7 +343,7 @@ router.post(
       throw new AppError(404, 'Staff member not found.');
     }
     const branchNo = Number(req.body.branchNo);
-    if (!(await Branch.exists({ branchNo, active: true }))) {
+    if (!(await Branch.exists({ branchNo, operatingStatus: { $ne: 'disabled' } }))) {
       throw new AppError(400, 'Select an active branch.');
     }
     const salary = Number(req.body.salary || 0);
@@ -365,7 +368,7 @@ router.get(
     const [shifts, staff, branches] = await Promise.all([
       Shift.find().sort({ shiftDate: 1, startTime: 1 }).populate('staff'),
       Staff.find({ active: true }).sort({ name: 1 }),
-      Branch.find({ active: true }).sort({ branchNo: 1 })
+      Branch.find({ operatingStatus: { $ne: 'disabled' } }).sort({ branchNo: 1 })
     ]);
     res.render('admin/shifts', {
       title: 'Staff scheduling',
@@ -484,7 +487,7 @@ router.get(
     const [batches, suppliers, branches] = await Promise.all([
       SupplyBatch.find().sort({ receivedDate: -1 }).populate('supplier'),
       Supplier.find({ active: true }).sort({ name: 1 }),
-      Branch.find({ active: true }).sort({ branchNo: 1 })
+      Branch.find({ operatingStatus: { $ne: 'disabled' } }).sort({ branchNo: 1 })
     ]);
     res.render('admin/batches', {
       title: 'Supply batches',
@@ -506,7 +509,7 @@ router.post(
       throw new AppError(400, 'Select an active supplier.');
     }
     const branchNo = Number(req.body.branchNo);
-    if (!(await Branch.exists({ branchNo, active: true }))) {
+    if (!(await Branch.exists({ branchNo, operatingStatus: 'active' }))) {
       throw new AppError(400, 'Select an active branch.');
     }
     const receivedDate = String(req.body.receivedDate || '');

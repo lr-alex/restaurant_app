@@ -44,8 +44,12 @@ const branchSchema = new mongoose.Schema(
         message: 'A branch must have at least one booking slot'
       }
     },
-    isResting: { type: Boolean, default: false },
-    active: { type: Boolean, default: true }
+    operatingStatus: {
+      type: String,
+      enum: ['active', 'resting', 'disabled'],
+      default: 'active',
+      index: true
+    }
   },
   { timestamps: true }
 );

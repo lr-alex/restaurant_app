@@ -84,7 +84,9 @@ router.delete('/session', (req, res, next) => {
 router.get(
   '/branches',
   asyncRoute(async (_req, res) => {
-    const branches = await Branch.find({ active: true })
+    const branches = await Branch.find({
+      operatingStatus: { $ne: 'disabled' }
+    })
       .sort({ branchNo: 1 })
       .lean();
     res.json({ data: branches });

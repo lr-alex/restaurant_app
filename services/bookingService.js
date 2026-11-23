@@ -35,8 +35,7 @@ async function validateBookingInput(input, options = {}) {
 
   const branch = await Branch.findOne({
     branchNo,
-    active: true,
-    isResting: false
+    operatingStatus: 'active'
   });
   if (!branch) {
     throw new AppError(404, 'The selected branch is resting or unavailable.');

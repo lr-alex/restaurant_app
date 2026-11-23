@@ -80,6 +80,7 @@ async function resetDemoData() {
       openTime: '09:00',
       closeTime: '22:00',
       restDay: 'Monday',
+      operatingStatus: 'active',
       bookingSlots: [
         { startTime: '09:00', endTime: '11:00', capacity: 20 },
         { startTime: '11:00', endTime: '13:00', capacity: 24 },
@@ -96,7 +97,7 @@ async function resetDemoData() {
       openTime: '10:00',
       closeTime: '23:00',
       restDay: 'Tuesday',
-      isResting: true,
+      operatingStatus: 'resting',
       bookingSlots: [
         { startTime: '10:00', endTime: '12:00', capacity: 20 },
         { startTime: '12:00', endTime: '14:00', capacity: 24 },
@@ -113,6 +114,7 @@ async function resetDemoData() {
       openTime: '08:00',
       closeTime: '21:00',
       restDay: 'Wednesday',
+      operatingStatus: 'active',
       bookingSlots: [
         { startTime: '08:00', endTime: '10:00', capacity: 12 },
         { startTime: '10:00', endTime: '12:00', capacity: 16 },
@@ -129,6 +131,7 @@ async function resetDemoData() {
       openTime: '11:00',
       closeTime: '22:00',
       restDay: 'Thursday',
+      operatingStatus: 'active',
       bookingSlots: [
         { startTime: '11:00', endTime: '13:00', capacity: 16 },
         { startTime: '13:00', endTime: '15:00', capacity: 16 },

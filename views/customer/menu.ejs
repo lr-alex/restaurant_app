@@ -11,8 +11,8 @@
       <label class="form-label small" for="menuBranch">Ordering from</label>
       <div class="input-group">
         <select class="form-select" id="menuBranch" name="branchNo">
-          <% branches.forEach((branch) => { %>
-            <option value="<%= branch.branchNo %>" <%= branch.branchNo === selectedBranchNo ? 'selected' : '' %> <%= branch.isResting ? 'disabled' : '' %>>#<%= branch.branchNo %> · <%= branch.address %><%= branch.isResting ? ' · RESTING' : '' %></option>
+          <% branches.forEach((branch) => { const branchStatus = branch.operatingStatus || 'active'; %>
+            <option value="<%= branch.branchNo %>" <%= branch.branchNo === selectedBranchNo ? 'selected' : '' %> <%= branchStatus !== 'active' ? 'disabled' : '' %>>#<%= branch.branchNo %> · <%= branch.address %><%= branchStatus !== 'active' ? ` · ${branchStatus.toUpperCase()}` : '' %></option>
           <% }) %>
         </select>
         <button class="btn btn-dark" type="submit">Switch</button>

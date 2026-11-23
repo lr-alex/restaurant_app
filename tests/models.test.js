@@ -43,6 +43,27 @@ test('branch requires at least one booking slot', () => {
   assert.ok(branch.validateSync().errors.bookingSlots);
 });
 
+test('branch operating status is a single constrained value', () => {
+  const base = {
+    branchNo: 9,
+    name: 'Test Room',
+    address: '1 Test Street',
+    openTime: '09:00',
+    closeTime: '17:00',
+    restDay: 'Monday',
+    bookingSlots: [{ startTime: '09:00', endTime: '11:00', capacity: 10 }]
+  };
+  assert.equal(new Branch(base).operatingStatus, 'active');
+  assert.equal(
+    new Branch({ ...base, operatingStatus: 'resting' }).validateSync(),
+    undefined
+  );
+  assert.ok(
+    new Branch({ ...base, operatingStatus: 'active-and-resting' }).validateSync().errors
+      .operatingStatus
+  );
+});
+
 test('orders require line items and enforce a non-negative total', () => {
   const order = new Order({
     customer: new mongoose.Types.ObjectId(),

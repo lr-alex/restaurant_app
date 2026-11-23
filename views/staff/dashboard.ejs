@@ -10,7 +10,7 @@
     <span class="live-pill"><span></span>Live branch view</span>
   </div>
   <%- include('../partials/flash') %>
-  <% if (branch && branch.isResting) { %>
+  <% if (typeof branch !== 'undefined' && branch && branch.operatingStatus === 'resting') { %>
     <div class="alert alert-warning">
       <strong>This branch is resting.</strong> Customer reservations and new orders are disabled, but staff can still review the workspace and schedule.
     </div>

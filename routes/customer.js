@@ -18,7 +18,9 @@ const router = express.Router();
 router.use('/customer', requireRole('customer'));
 
 async function availableBranches() {
-  return Branch.find({ active: true }).sort({ branchNo: 1 }).lean();
+  return Branch.find({ operatingStatus: { $ne: 'disabled' } })
+    .sort({ branchNo: 1 })
+    .lean();
 }
 
 router.get(
@@ -90,8 +92,7 @@ router.post(
     const branchNo = Number(req.body.branchNo);
     const branch = await Branch.findOne({
       branchNo,
-      active: true,
-      isResting: false
+      operatingStatus: 'active'
     });
     if (!branch) {
       throw new AppError(400, 'Select an open branch.');
@@ -106,7 +107,9 @@ router.get(
   '/customer/menu',
   asyncRoute(async (req, res) => {
     const branches = await availableBranches();
-    const openBranches = branches.filter((branch) => !branch.isResting);
+    const openBranches = branches.filter(
+      (branch) => branch.operatingStatus === 'active'
+    );
     const selectedBranchIsOpen = openBranches.some(
       (branch) => branch.branchNo === req.session.branchNo
     );

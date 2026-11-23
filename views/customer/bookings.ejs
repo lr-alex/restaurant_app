@@ -15,22 +15,22 @@
       <section class="surface-card sticky-card">
         <p class="eyebrow">New reservation</p>
         <h2 class="h4 mb-4">Reserve your table</h2>
-        <% if (!branches.some((branch) => !branch.isResting)) { %>
+        <% if (!branches.some((branch) => (branch.operatingStatus || 'active') === 'active')) { %>
           <p class="text-muted mb-0">No branches are currently accepting reservations.</p>
         <% } else { %>
           <form action="/customer/bookings" method="post" class="vstack gap-3 booking-form">
             <div>
               <label class="form-label" for="branchNo">Branch</label>
               <select class="form-select branch-select" id="branchNo" name="branchNo" required>
-                <% branches.forEach((branch) => { %>
+                <% branches.forEach((branch) => { const branchStatus = branch.operatingStatus || 'active'; %>
                   <option
                     value="<%= branch.branchNo %>"
-                    <%= branch.isResting ? 'disabled' : '' %>
+                    <%= branchStatus !== 'active' ? 'disabled' : '' %>
                     data-address="<%= branch.address %>"
                     data-hours="<%= branch.openTime %>–<%= branch.closeTime %>"
-                    data-rest-day="<%= branch.isResting ? 'Resting — not accepting reservations' : `Closes ${branch.restDay}` %>"
+                    data-rest-day="<%= branchStatus === 'resting' ? 'Resting — not accepting reservations' : branchStatus === 'disabled' ? 'Disabled' : `Closes ${branch.restDay}` %>"
                     data-slots="<%= JSON.stringify(branch.bookingSlots) %>"
-                  >#<%= branch.branchNo %> · <%= branch.address %> · <%= branch.openTime %>–<%= branch.closeTime %><%= branch.isResting ? ' · RESTING' : '' %></option>
+                  >#<%= branch.branchNo %> · <%= branch.address %> · <%= branch.openTime %>–<%= branch.closeTime %><%= branchStatus !== 'active' ? ` · ${branchStatus.toUpperCase()}` : '' %></option>
                 <% }) %>
               </select>
               <div class="branch-note" data-branch-note></div>

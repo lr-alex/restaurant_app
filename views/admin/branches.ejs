@@ -42,9 +42,15 @@
               <% ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].forEach((day) => { %><option><%= day %></option><% }) %>
             </select>
           </div>
-          <div class="col-md-3 d-flex align-items-end gap-3">
-            <div class="form-check mb-2"><input class="form-check-input" name="active" type="checkbox" checked><label class="form-check-label">Active</label></div>
-            <div class="form-check mb-2"><input class="form-check-input" name="isResting" type="checkbox"><label class="form-check-label">Resting</label></div>
+          <div class="col-md-3 d-flex align-items-end">
+            <div class="btn-group w-100" role="group" aria-label="Operating status">
+              <input class="btn-check" type="radio" name="operatingStatus" id="newBranchActive" value="active" checked>
+              <label class="btn btn-outline-success" for="newBranchActive">Active</label>
+              <input class="btn-check" type="radio" name="operatingStatus" id="newBranchResting" value="resting">
+              <label class="btn btn-outline-warning" for="newBranchResting">Resting</label>
+              <input class="btn-check" type="radio" name="operatingStatus" id="newBranchDisabled" value="disabled">
+              <label class="btn btn-outline-danger" for="newBranchDisabled">Disabled</label>
+            </div>
           </div>
         </div>
         <div>
@@ -63,7 +69,7 @@
   </section>
 
   <div class="vstack gap-3">
-    <% branches.forEach((branch) => { const branchState = !branch.active ? 'Disabled' : branch.isResting ? 'Resting' : 'Open'; const branchStateClass = !branch.active ? 'status-cancelled' : branch.isResting ? 'status-resting' : 'status-confirmed'; %>
+    <% branches.forEach((branch) => { const branchStatus = branch.operatingStatus || (branch.isResting ? 'resting' : branch.active === false ? 'disabled' : 'active'); const branchState = statusLabel(branchStatus); const branchStateClass = branchStatus === 'active' ? 'status-confirmed' : branchStatus === 'resting' ? 'status-resting' : 'status-cancelled'; %>
       <article class="surface-card">
         <div class="section-title">
           <div>
@@ -87,9 +93,15 @@
                   <% ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].forEach((day) => { %><option <%= branch.restDay === day ? 'selected' : '' %>><%= day %></option><% }) %>
                 </select>
               </div>
-              <div class="col-md-3 d-flex align-items-end gap-3">
-                <div class="form-check mb-2"><input class="form-check-input" name="active" type="checkbox" <%= branch.active ? 'checked' : '' %>><label class="form-check-label">Active</label></div>
-                <div class="form-check mb-2"><input class="form-check-input" name="isResting" type="checkbox" <%= branch.isResting ? 'checked' : '' %>><label class="form-check-label">Resting</label></div>
+              <div class="col-md-3 d-flex align-items-end">
+                <div class="btn-group w-100" role="group" aria-label="Operating status for branch <%= branch.branchNo %>">
+                  <input class="btn-check" type="radio" name="operatingStatus" id="branch-<%= branch._id %>-active" value="active" <%= branchStatus === 'active' ? 'checked' : '' %>>
+                  <label class="btn btn-outline-success" for="branch-<%= branch._id %>-active">Active</label>
+                  <input class="btn-check" type="radio" name="operatingStatus" id="branch-<%= branch._id %>-resting" value="resting" <%= branchStatus === 'resting' ? 'checked' : '' %>>
+                  <label class="btn btn-outline-warning" for="branch-<%= branch._id %>-resting">Resting</label>
+                  <input class="btn-check" type="radio" name="operatingStatus" id="branch-<%= branch._id %>-disabled" value="disabled" <%= branchStatus === 'disabled' ? 'checked' : '' %>>
+                  <label class="btn btn-outline-danger" for="branch-<%= branch._id %>-disabled">Disabled</label>
+                </div>
               </div>
             </div>
             <div>
