@@ -72,7 +72,46 @@ Common statuses:
 
 `GET /api/branches`
 
-Returns active branches and their configured reservation slots. Available to every signed-in role.
+Returns branches whose `operatingStatus` is `active` or `resting`, with their configured reservation slots. `disabled` branches are omitted. Available to every signed-in role.
+
+```json
+{
+  "data": [
+    {
+      "branchNo": 1,
+      "name": "Downtown Room",
+      "operatingStatus": "active",
+      "bookingSlots": [
+        {
+          "startTime": "19:00",
+          "endTime": "21:00",
+          "capacity": 28
+        }
+      ]
+    },
+    {
+      "branchNo": 2,
+      "name": "Waterfront Kitchen",
+      "operatingStatus": "resting",
+      "bookingSlots": [
+        {
+          "startTime": "18:00",
+          "endTime": "20:00",
+          "capacity": 30
+        }
+      ]
+    }
+  ]
+}
+```
+
+Branch states:
+
+- `active`: accepts customer reservations and orders.
+- `resting`: remains visible to signed-in clients and staff can still access its workspace, but `POST /api/bookings` and `POST /api/orders` reject it.
+- `disabled`: omitted from this endpoint and unavailable to customers.
+
+Branch operating status is managed by the administrator web interface. This API exposes branches as a read-only resource.
 
 ## Meals
 
@@ -159,7 +198,7 @@ curl -b cookies.txt \
 The server validates:
 
 - date is today or future
-- branch is active
+- branch `operatingStatus` is `active`
 - date is not the branch rest day
 - slot exists in the branch configuration
 - today's slot has not passed
@@ -244,6 +283,8 @@ curl -b cookies.txt \
 ```
 
 The client cannot submit a total or unit price. The server loads each available meal, creates name/price snapshots, and calculates the stored total.
+
+Orders can only be placed against a branch whose `operatingStatus` is `active`.
 
 ### Update kitchen status
 
