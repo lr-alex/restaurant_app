@@ -9,6 +9,11 @@
     </div>
   </div>
   <%- include('../partials/flash') %>
+  <% if (branch && branch.isResting) { %>
+    <div class="alert alert-warning">
+      <strong>This branch is resting.</strong> Existing records remain visible, but the branch is not accepting new reservations.
+    </div>
+  <% } %>
   <div class="surface-card table-responsive">
     <table class="table align-middle mb-0">
       <thead>

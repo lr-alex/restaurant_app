@@ -33,9 +33,13 @@ async function validateBookingInput(input, options = {}) {
     throw new AppError(400, 'Select a valid booking slot.');
   }
 
-  const branch = await Branch.findOne({ branchNo, active: true });
+  const branch = await Branch.findOne({
+    branchNo,
+    active: true,
+    isResting: false
+  });
   if (!branch) {
-    throw new AppError(404, 'The selected branch is unavailable.');
+    throw new AppError(404, 'The selected branch is resting or unavailable.');
   }
   if (weekdayName(bookingDate) === branch.restDay) {
     throw new AppError(400, `This branch is closed on ${branch.restDay}s.`);

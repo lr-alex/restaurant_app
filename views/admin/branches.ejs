@@ -42,8 +42,9 @@
               <% ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].forEach((day) => { %><option><%= day %></option><% }) %>
             </select>
           </div>
-          <div class="col-md-3 d-flex align-items-end">
+          <div class="col-md-3 d-flex align-items-end gap-3">
             <div class="form-check mb-2"><input class="form-check-input" name="active" type="checkbox" checked><label class="form-check-label">Active</label></div>
+            <div class="form-check mb-2"><input class="form-check-input" name="isResting" type="checkbox"><label class="form-check-label">Resting</label></div>
           </div>
         </div>
         <div>
@@ -62,7 +63,7 @@
   </section>
 
   <div class="vstack gap-3">
-    <% branches.forEach((branch) => { %>
+    <% branches.forEach((branch) => { const branchState = !branch.active ? 'Disabled' : branch.isResting ? 'Resting' : 'Open'; const branchStateClass = !branch.active ? 'status-cancelled' : branch.isResting ? 'status-resting' : 'status-confirmed'; %>
       <article class="surface-card">
         <div class="section-title">
           <div>
@@ -70,7 +71,7 @@
             <h2><%= branch.name %></h2>
             <span class="text-muted"><%= branch.address %></span>
           </div>
-          <span class="status-badge <%= branch.active ? 'status-confirmed' : 'status-cancelled' %>"><%= branch.active ? 'Active' : 'Disabled' %></span>
+          <span class="status-badge <%= branchStateClass %>"><%= branchState %></span>
         </div>
         <div class="collapse" id="branch-<%= branch._id %>">
           <form action="/admin/branches/<%= branch._id %>" method="post" class="vstack gap-3 border-top pt-3">
@@ -86,7 +87,10 @@
                   <% ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].forEach((day) => { %><option <%= branch.restDay === day ? 'selected' : '' %>><%= day %></option><% }) %>
                 </select>
               </div>
-              <div class="col-md-3 d-flex align-items-end"><div class="form-check mb-2"><input class="form-check-input" name="active" type="checkbox" <%= branch.active ? 'checked' : '' %>><label class="form-check-label">Active</label></div></div>
+              <div class="col-md-3 d-flex align-items-end gap-3">
+                <div class="form-check mb-2"><input class="form-check-input" name="active" type="checkbox" <%= branch.active ? 'checked' : '' %>><label class="form-check-label">Active</label></div>
+                <div class="form-check mb-2"><input class="form-check-input" name="isResting" type="checkbox" <%= branch.isResting ? 'checked' : '' %>><label class="form-check-label">Resting</label></div>
+              </div>
             </div>
             <div>
               <label class="form-label">Booking slots</label>

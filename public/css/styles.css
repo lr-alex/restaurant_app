@@ -344,6 +344,11 @@ h3 {
   background: #f4ddca;
 }
 
+.status-resting {
+  color: #8a4b20;
+  background: #f7dfc5;
+}
+
 .empty-state {
   padding: 4rem 1.5rem;
   text-align: center;

@@ -12,7 +12,7 @@
       <div class="input-group">
         <select class="form-select" id="menuBranch" name="branchNo">
           <% branches.forEach((branch) => { %>
-            <option value="<%= branch.branchNo %>" <%= branch.branchNo === selectedBranchNo ? 'selected' : '' %>>#<%= branch.branchNo %> · <%= branch.address %></option>
+            <option value="<%= branch.branchNo %>" <%= branch.branchNo === selectedBranchNo ? 'selected' : '' %> <%= branch.isResting ? 'disabled' : '' %>>#<%= branch.branchNo %> · <%= branch.address %><%= branch.isResting ? ' · RESTING' : '' %></option>
           <% }) %>
         </select>
         <button class="btn btn-dark" type="submit">Switch</button>

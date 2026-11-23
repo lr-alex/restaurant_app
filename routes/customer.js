@@ -88,9 +88,13 @@ router.post(
   '/customer/branch',
   asyncRoute(async (req, res) => {
     const branchNo = Number(req.body.branchNo);
-    const branch = await Branch.findOne({ branchNo, active: true });
+    const branch = await Branch.findOne({
+      branchNo,
+      active: true,
+      isResting: false
+    });
     if (!branch) {
-      throw new AppError(400, 'Select an available branch.');
+      throw new AppError(400, 'Select an open branch.');
     }
     req.session.branchNo = branchNo;
     req.session.cart = {};
@@ -102,8 +106,12 @@ router.get(
   '/customer/menu',
   asyncRoute(async (req, res) => {
     const branches = await availableBranches();
-    if (!req.session.branchNo && branches.length) {
-      req.session.branchNo = branches[0].branchNo;
+    const openBranches = branches.filter((branch) => !branch.isResting);
+    const selectedBranchIsOpen = openBranches.some(
+      (branch) => branch.branchNo === req.session.branchNo
+    );
+    if (!selectedBranchIsOpen && openBranches.length) {
+      req.session.branchNo = openBranches[0].branchNo;
     }
     const [meals, favoriteMeals] = await Promise.all([
       Meal.find({ isAvailable: true }).sort({ category: 1, name: 1 }).lean(),

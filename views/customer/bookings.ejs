@@ -15,7 +15,7 @@
       <section class="surface-card sticky-card">
         <p class="eyebrow">New reservation</p>
         <h2 class="h4 mb-4">Reserve your table</h2>
-        <% if (!branches.length) { %>
+        <% if (!branches.some((branch) => !branch.isResting)) { %>
           <p class="text-muted mb-0">No branches are currently accepting reservations.</p>
         <% } else { %>
           <form action="/customer/bookings" method="post" class="vstack gap-3 booking-form">
@@ -25,11 +25,12 @@
                 <% branches.forEach((branch) => { %>
                   <option
                     value="<%= branch.branchNo %>"
+                    <%= branch.isResting ? 'disabled' : '' %>
                     data-address="<%= branch.address %>"
                     data-hours="<%= branch.openTime %>–<%= branch.closeTime %>"
-                    data-rest-day="Closes <%= branch.restDay %>"
+                    data-rest-day="<%= branch.isResting ? 'Resting — not accepting reservations' : `Closes ${branch.restDay}` %>"
                     data-slots="<%= JSON.stringify(branch.bookingSlots) %>"
-                  >#<%= branch.branchNo %> · <%= branch.address %> · <%= branch.openTime %>–<%= branch.closeTime %></option>
+                  >#<%= branch.branchNo %> · <%= branch.address %> · <%= branch.openTime %>–<%= branch.closeTime %><%= branch.isResting ? ' · RESTING' : '' %></option>
                 <% }) %>
               </select>
               <div class="branch-note" data-branch-note></div>

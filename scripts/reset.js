@@ -96,6 +96,7 @@ async function resetDemoData() {
       openTime: '10:00',
       closeTime: '23:00',
       restDay: 'Tuesday',
+      isResting: true,
       bookingSlots: [
         { startTime: '10:00', endTime: '12:00', capacity: 20 },
         { startTime: '12:00', endTime: '14:00', capacity: 24 },
@@ -223,14 +224,6 @@ async function resetDemoData() {
       isMember: true,
       vipId: 'VIP-002',
       favoriteMealIds: [meals[1]._id]
-    },
-    {
-      customerCode: 'CUS-1003',
-      name: 'Michael Scott',
-      phone: '+1-555-0144',
-      dateOfBirth: '1965-03-15',
-      isMember: false,
-      favoriteMealIds: [meals[2]._id]
     }
   ]);
 

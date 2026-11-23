@@ -22,11 +22,12 @@
                   <option
                     value="<%= branch.branchNo %>"
                     <%= branch.branchNo === booking.branchNo ? 'selected' : '' %>
+                    <%= branch.isResting && branch.branchNo !== booking.branchNo ? 'disabled' : '' %>
                     data-address="<%= branch.address %>"
                     data-hours="<%= branch.openTime %>–<%= branch.closeTime %>"
-                    data-rest-day="Closes <%= branch.restDay %>"
+                    data-rest-day="<%= branch.isResting && branch.branchNo !== booking.branchNo ? 'Resting — not accepting reservations' : `Closes ${branch.restDay}` %>"
                     data-slots="<%= JSON.stringify(branch.bookingSlots) %>"
-                  >#<%= branch.branchNo %> · <%= branch.address %></option>
+                  >#<%= branch.branchNo %> · <%= branch.address %><%= branch.isResting ? ' · RESTING' : '' %></option>
                 <% }) %>
               </select>
               <div class="branch-note" data-branch-note></div>

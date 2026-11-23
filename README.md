@@ -85,6 +85,8 @@ Password storage is plaintext in `accounts.password`, per the project's explicit
 
 Reservations and orders are retained when cancelled. Meals, staff, and suppliers with historical references are disabled instead of physically deleted.
 
+The reset baseline places both customer reservations at Branch 1. Branch 2 remains active for staff access and scheduling but is marked as resting, so it does not accept customer reservations or orders.
+
 ## Verification
 
 Run the database-independent tests:

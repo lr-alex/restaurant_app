@@ -1,5 +1,6 @@
 const express = require('express');
 const Booking = require('../models/Booking');
+const Branch = require('../models/Branch');
 const Meal = require('../models/Meal');
 const Order = require('../models/Order');
 const Shift = require('../models/Shift');
@@ -17,7 +18,8 @@ router.use('/staff', requireRole('staff'));
 router.get(
   '/staff/dashboard',
   asyncRoute(async (req, res) => {
-    const [orders, bookings] = await Promise.all([
+    const [branch, orders, bookings] = await Promise.all([
+      Branch.findOne({ branchNo: req.profile.branchNo }),
       Order.find({
         branchNo: req.profile.branchNo,
         status: { $in: ['placed', 'preparing', 'ready'] }
@@ -34,6 +36,7 @@ router.get(
     ]);
     res.render('staff/dashboard', {
       title: 'Kitchen dashboard',
+      branch,
       orders,
       bookings
     });
@@ -59,11 +62,15 @@ router.post(
 router.get(
   '/staff/bookings',
   asyncRoute(async (req, res) => {
-    const bookings = await Booking.find({ branchNo: req.profile.branchNo })
-      .sort({ bookingDate: 1, slotStart: 1 })
-      .populate('customer');
+    const [branch, bookings] = await Promise.all([
+      Branch.findOne({ branchNo: req.profile.branchNo }),
+      Booking.find({ branchNo: req.profile.branchNo })
+        .sort({ bookingDate: 1, slotStart: 1 })
+        .populate('customer')
+    ]);
     res.render('staff/bookings', {
       title: 'Branch reservations',
+      branch,
       bookings
     });
   })

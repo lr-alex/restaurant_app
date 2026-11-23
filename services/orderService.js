@@ -27,9 +27,13 @@ function normalizeItems(items) {
 
 async function createOrder(customerId, input) {
   const branchNo = Number(input.branchNo);
-  const branch = await Branch.findOne({ branchNo, active: true });
+  const branch = await Branch.findOne({
+    branchNo,
+    active: true,
+    isResting: false
+  });
   if (!branch) {
-    throw new AppError(400, 'Select an available branch before ordering.');
+    throw new AppError(400, 'Select an open branch before ordering.');
   }
 
   const quantities = normalizeItems(input.items);

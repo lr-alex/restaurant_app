@@ -78,6 +78,7 @@ function readBranch(body) {
     closeTime,
     restDay: body.restDay,
     bookingSlots,
+    isResting: body.isResting === 'on' || body.isResting === 'true',
     active: body.active === 'on' || body.active === 'true'
   };
 }
