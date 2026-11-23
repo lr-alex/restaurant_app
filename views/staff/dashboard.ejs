@@ -1,13 +1,16 @@
 <%- include('../partials/head', { title }) %>
 <%- include('../partials/nav') %>
 <main class="container page-shell">
+  <% const branchStatus = typeof branch !== 'undefined' && branch ? (branch.operatingStatus || 'active') : 'unknown'; %>
   <div class="page-heading">
     <div>
       <p class="eyebrow">Branch #<%= currentProfile.branchNo %> · service board</p>
       <h1>Kitchen dashboard</h1>
       <p><%= currentProfile.name %>, keep orders moving and watch the next incoming tables.</p>
     </div>
-    <span class="live-pill"><span></span>Live branch view</span>
+    <span class="status-badge <%= branchStatus === 'active' ? 'status-confirmed' : branchStatus === 'resting' ? 'status-resting' : 'status-cancelled' %>">
+      Branch #<%= currentProfile.branchNo %> · <%= branchStatus === 'unknown' ? 'Status unavailable' : branchStatus === 'active' ? 'Live' : statusLabel(branchStatus) %>
+    </span>
   </div>
   <%- include('../partials/flash') %>
   <% if (typeof branch !== 'undefined' && branch && branch.operatingStatus === 'resting') { %>
