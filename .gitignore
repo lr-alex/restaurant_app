@@ -1,5 +1,6 @@
 node_modules/
 .tools/
+*-cookies.txt
 coverage/
 *.log
 .DS_Store

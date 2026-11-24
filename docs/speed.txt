@@ -1,36 +1,18 @@
-Saffron & Stone REST API Test — Detailed PowerShell Steps
-===========================================================
+Saffron & Stone REST API Speed Test
+===================================
 
-This file contains the tested Windows PowerShell procedure for exercising the
-REST API. Run these commands in a PowerShell terminal, not in the browser
-address bar.
+Use PowerShell terminals. Do not paste commands into the browser address bar.
 
-The procedure was tested against the current application on a temporary port.
-Use port 8099 below for the normal local setup.
+The tested one-command runner is:
 
+    npm run test:api
 
-0. Important PowerShell rule
-----------------------------
-
-Use curl.exe, not the PowerShell alias named curl.
-
-Do not send JSON with --data-raw when the JSON is stored in a PowerShell
-variable on Windows PowerShell 5.1. PowerShell can remove the inner double
-quotes and the API receives malformed JSON.
-
-Reliable pattern:
-
-    $body = @{ key = "value" } | ConvertTo-Json -Compress
-    $body | curl.exe ... -H "Content-Type: application/json" --data-binary "@-"
-
-The request body is piped to curl through standard input. This avoids command
-line quoting problems.
+It exercises the same session, role, Branch status, booking, order, Staff
+authorization, and Admin CRUD paths used by the application.
 
 
-1. Prepare the application
---------------------------
-
-In the first PowerShell terminal:
+1. Open the first PowerShell terminal
+-------------------------------------
 
     cd D:\study\hkmu\comp_3810_sever-side\proj\restaurant_app
     npm run reset
@@ -43,71 +25,120 @@ Expected:
     Database restored to the pre-CRUD demo baseline.
     Saffron & Stone listening at http://localhost:8099
 
-Leave this terminal running. Open a second PowerShell terminal for the API
-requests.
-
-If you changed the port, set the matching base URL:
-
-    $base = "http://localhost:8099"
+Keep this terminal running.
 
 
-2. Verify that authentication is required
------------------------------------------
+2. Open a second PowerShell terminal
+------------------------------------
 
-    $base = "http://localhost:8099"
-    curl.exe -s -o NUL -w "%{http_code}" "$base/api/branches"
+    cd D:\study\hkmu\comp_3810_sever-side\proj\restaurant_app
+
+Run the complete test:
+
+    npm run test:api
+
+Alternative direct invocation:
+
+    powershell -ExecutionPolicy Bypass -File .\scripts\api-speed.ps1
+
+If the server uses a different URL:
+
+    powershell -ExecutionPolicy Bypass -File .\scripts\api-speed.ps1 `
+      -BaseUrl "http://localhost:8100"
+
+
+3. Expected output
+------------------
+
+    PASS  Anonymous branches                   401
+    PASS  Customer login                       201
+    PASS  Customer role                        customer
+    PASS  Current customer session             200
+    PASS  Customer name                        Bob Johnson
+    PASS  Branch 1 operating status            active
+    PASS  Branch 2 operating status            resting
+    PASS  Meal catalog available               True
+    PASS  Create Branch 1 booking              201
+    PASS  New booking status                   pending
+    PASS  Reject duplicate booking             409
+    PASS  Reject resting-branch booking        404
+    PASS  Create Branch 1 order                201
+    PASS  New order status                     placed
+    PASS  Server-calculated order total        True
+    PASS  Reject resting-branch order          400
+    PASS  Staff 1 login                        201
+    PASS  Staff updates order                  200
+    PASS  Updated order status                 preparing
+    PASS  Staff branch isolation               403
+    PASS  Staff 2 login                        201
+    PASS  Staff 2 order count                  0
+    PASS  Staff 2 booking count                0
+    PASS  Booking DELETE is disabled           405
+    PASS  Order DELETE is disabled             405
+    PASS  Admin login                          201
+    PASS  Admin creates meal                   201
+    PASS  Admin updates meal                   200
+    PASS  Updated meal price                   2.25
+    PASS  Admin deletes unused meal            204
+    PASS  Customer logout                      204
+
+    Result: 31 passed, 0 failed
+    Run 'npm run reset' to remove the test booking and order.
+
+If any line starts with FAIL, the script exits with code 1.
+
+
+4. Restore the demo baseline
+----------------------------
+
+After the test:
+
+    npm run reset
+
+This removes the booking and order created by the test.
+
+
+5. Manual login check with PowerShell
+-------------------------------------
+
+If the automated script cannot connect, test the server first:
+
+    curl.exe -s -o NUL -w "%{http_code}" `
+      http://localhost:8099/api/branches
 
 Expected:
 
     401
 
-This proves that API resources are protected by the session.
+Now log in using PowerShell native JSON and a real WebRequestSession:
 
+    $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 
-3. Create separate Cookie files
--------------------------------
-
-    $tmp = $env:TEMP
-    $customerCookies = Join-Path $tmp "saffron-customer-cookies.txt"
-    $staffCookies = Join-Path $tmp "saffron-staff-cookies.txt"
-    $staff2Cookies = Join-Path $tmp "saffron-staff2-cookies.txt"
-    $adminCookies = Join-Path $tmp "saffron-admin-cookies.txt"
-
-Use a different Cookie file for each role so the sessions do not overwrite
-each other.
-
-
-4. Sign in as Customer 1
-------------------------
-
-    $loginBody = @{
+    $body = @{
       username = "customer1"
       password = "Customer@123"
     } | ConvertTo-Json -Compress
 
-    $customerLoginStatus = $loginBody | curl.exe -s -o NUL -w "%{http_code}" `
-      -c $customerCookies `
-      -X POST "$base/api/session" `
-      -H "Content-Type: application/json" `
-      --data-binary "@-"
+    $request = @{
+      Method = "POST"
+      Uri = "http://localhost:8099/api/session"
+      WebSession = $session
+      ContentType = "application/json"
+      Body = $body
+      UseBasicParsing = $true
+    }
 
-    $customerLoginStatus
+    Invoke-WebRequest @request
 
 Expected:
 
-    201
+    201 Created
 
-To see the complete response and Set-Cookie header:
+Check the stored session:
 
-    $loginBody | curl.exe -s -i `
-      -c $customerCookies `
-      -X POST "$base/api/session" `
-      -H "Content-Type: application/json" `
-      --data-binary "@-"
-
-Verify the current session:
-
-    curl.exe -s -b $customerCookies "$base/api/session" | ConvertFrom-Json
+    Invoke-RestMethod `
+      -Uri "http://localhost:8099/api/session" `
+      -WebSession $session
 
 Expected:
 
@@ -116,483 +147,34 @@ Expected:
     profile.name = Bob Johnson
 
 
-5. Read Branch operating status
--------------------------------
-
-    $branches = (
-      curl.exe -s -b $customerCookies "$base/api/branches" |
-      ConvertFrom-Json
-    ).data
-
-    $branches |
-      Select-Object branchNo, name, operatingStatus
-
-Expected:
-
-    Branch 1 = active
-    Branch 2 = resting
-    Branch 3 = active
-    Branch 4 = active
-
-GET /api/branches is a read-only endpoint. Branch status changes are performed
-through the administrator web interface.
-
-
-6. Read the meal catalog
-------------------------
-
-    $meals = (
-      curl.exe -s -b $customerCookies "$base/api/meals" |
-      ConvertFrom-Json
-    ).data
-
-    $meals | Select-Object name, category, price
-    $mealId = $meals[0]._id
-    $mealId
-
-The returned _id is a MongoDB ObjectId. Keep it in $mealId for the order test.
-
-
-7. Create a valid booking on Branch 1
--------------------------------------
-
-Build a future date that is not Monday, because Branch 1 rests on Monday:
-
-    $bookingDate = (Get-Date).Date.AddDays(7)
-    while ($bookingDate.DayOfWeek -eq "Monday") {
-      $bookingDate = $bookingDate.AddDays(1)
-    }
-
-    $bookingBody = @{
-      branchNo = 1
-      bookingDate = $bookingDate.ToString("yyyy-MM-dd")
-      slotStart = "19:00"
-      slotEnd = "21:00"
-      partySize = 2
-      notes = "speed.txt API test"
-    } | ConvertTo-Json -Compress
-
-    $booking = (
-      $bookingBody | curl.exe -s `
-        -b $customerCookies `
-        -X POST "$base/api/bookings" `
-        -H "Content-Type: application/json" `
-        --data-binary "@-" |
-      ConvertFrom-Json
-    ).data
-
-    $bookingId = $booking._id
-
-    $booking |
-      Select-Object _id, branchNo, bookingDate, slotStart, slotEnd,
-        partySize, status
-
-Expected:
-
-    status = pending
-    branchNo = 1
-
-Read the created booking:
-
-    curl.exe -s -b $customerCookies `
-      "$base/api/bookings/$bookingId" |
-      ConvertFrom-Json
-
-
-8. Test duplicate-booking protection
-------------------------------------
-
-Send the same booking body again:
-
-    $duplicateStatus = $bookingBody | curl.exe -s -o NUL -w "%{http_code}" `
-      -b $customerCookies `
-      -X POST "$base/api/bookings" `
-      -H "Content-Type: application/json" `
-      --data-binary "@-"
-
-    $duplicateStatus
-
-Expected:
-
-    409
-
-The server rejects a second active booking for the same customer, branch,
-date, and slot.
-
-
-9. Test a resting Branch
-------------------------
-
-    $restingBookingBody = @{
-      branchNo = 2
-      bookingDate = (Get-Date).Date.AddDays(10).ToString("yyyy-MM-dd")
-      slotStart = "10:00"
-      slotEnd = "12:00"
-      partySize = 2
-    } | ConvertTo-Json -Compress
-
-    $restingBookingStatus = $restingBookingBody | curl.exe `
-      -s -o NUL -w "%{http_code}" `
-      -b $customerCookies `
-      -X POST "$base/api/bookings" `
-      -H "Content-Type: application/json" `
-      --data-binary "@-"
-
-    $restingBookingStatus
-
-Expected:
-
-    404
-
-Branch 2 exists and is visible, but its operatingStatus is resting, so it is
-not an available booking target.
-
-
-10. Create an order on Branch 1
--------------------------------
-
-Do not send totalAmount or unitPrice. The server calculates both.
-
-    $orderBody = @{
-      branchNo = 1
-      items = @(
-        @{
-          mealId = $mealId
-          quantity = 2
-        }
-      )
-    } | ConvertTo-Json -Depth 5 -Compress
-
-    $order = (
-      $orderBody | curl.exe -s `
-        -b $customerCookies `
-        -X POST "$base/api/orders" `
-        -H "Content-Type: application/json" `
-        --data-binary "@-" |
-      ConvertFrom-Json
-    ).data
-
-    $orderId = $order._id
-
-    $order |
-      Select-Object _id, branchNo, status, totalAmount, items
-
-Expected:
-
-    status = placed
-    items contains a server-created meal name, unit price, quantity, subtotal
-    totalAmount is calculated by the server
-
-In the tested seed data with the first returned meal at quantity 2, the total
-was 15.00.
-
-
-11. Test ordering from the resting Branch
+6. Why the old login command returned 400
 -----------------------------------------
 
-    $restingOrderBody = @{
-      branchNo = 2
-      items = @(
-        @{
-          mealId = $mealId
-          quantity = 1
-        }
-      )
-    } | ConvertTo-Json -Depth 5 -Compress
+This command is unreliable in Windows PowerShell 5.1:
 
-    $restingOrderStatus = $restingOrderBody | curl.exe `
-      -s -o NUL -w "%{http_code}" `
-      -b $customerCookies `
-      -X POST "$base/api/orders" `
-      -H "Content-Type: application/json" `
-      --data-binary "@-"
+    curl.exe --data-raw '{"username":"customer1","password":"Customer@123"}'
 
-    $restingOrderStatus
+PowerShell can remove the JSON double quotes before curl receives the argument.
+The server then responds with:
 
-Expected:
+    400 Bad Request
+    Expected property name or '}' in JSON
 
-    400
+Use the tested `scripts/api-speed.ps1` script, or build the body with
+`ConvertTo-Json` and pass it as a PowerShell object/body.
 
-Branch 2 is resting and cannot accept new orders.
+The speed script uses `Invoke-WebRequest` and `ConvertTo-Json`, so it does not
+depend on browser interaction, curl aliases, or command-line JSON quoting.
 
 
-12. Sign in as Staff 1 and update the order
--------------------------------------------
+7. Files involved
+-----------------
 
-    $staffLoginBody = @{
-      username = "staff1"
-      password = "Staff@123"
-    } | ConvertTo-Json -Compress
+    docs\speed.txt
+        This procedure and expected output.
 
-    $staffLoginStatus = $staffLoginBody | curl.exe `
-      -s -o NUL -w "%{http_code}" `
-      -c $staffCookies `
-      -X POST "$base/api/session" `
-      -H "Content-Type: application/json" `
-      --data-binary "@-"
+    scripts\api-speed.ps1
+        Executable end-to-end API test.
 
-    $staffLoginStatus
-
-Expected:
-
-    201
-
-Update the new order:
-
-    $statusBody = @{ status = "preparing" } | ConvertTo-Json -Compress
-
-    $updatedOrder = (
-      $statusBody | curl.exe -s `
-        -b $staffCookies `
-        -X PATCH "$base/api/orders/$orderId" `
-        -H "Content-Type: application/json" `
-        --data-binary "@-" |
-      ConvertFrom-Json
-    ).data
-
-    $updatedOrder | Select-Object _id, branchNo, status
-
-Expected:
-
-    status = preparing
-
-
-13. Test Staff branch isolation
--------------------------------
-
-Staff 1 belongs to Branch 1 and must not query Branch 2 orders:
-
-    $isolationStatus = curl.exe -s -o NUL -w "%{http_code}" `
-      -b $staffCookies `
-      "$base/api/orders?branchNo=2"
-
-    $isolationStatus
-
-Expected:
-
-    403
-
-
-14. Verify Staff 2 has no customer activity
--------------------------------------------
-
-    $staff2LoginBody = @{
-      username = "staff2"
-      password = "Staff2@123"
-    } | ConvertTo-Json -Compress
-
-    $staff2LoginBody | curl.exe -s -o NUL `
-      -c $staff2Cookies `
-      -X POST "$base/api/session" `
-      -H "Content-Type: application/json" `
-      --data-binary "@-"
-
-    $staff2Orders = (
-      curl.exe -s -b $staff2Cookies "$base/api/orders" |
-      ConvertFrom-Json
-    ).data
-
-    $staff2Bookings = (
-      curl.exe -s -b $staff2Cookies "$base/api/bookings" |
-      ConvertFrom-Json
-    ).data
-
-    [pscustomobject]@{
-      Branch = 2
-      Orders = $staff2Orders.Count
-      Bookings = $staff2Bookings.Count
-    }
-
-Expected:
-
-    Branch = 2
-    Orders = 0
-    Bookings = 0
-
-Staff 2 can still log in and access the resting Branch 2 workspace.
-
-
-15. Test frozen DELETE behavior
--------------------------------
-
-    $deleteBookingStatus = curl.exe -s -o NUL -w "%{http_code}" `
-      -b $customerCookies `
-      -X DELETE "$base/api/bookings/$bookingId"
-
-    $deleteOrderStatus = curl.exe -s -o NUL -w "%{http_code}" `
-      -b $staffCookies `
-      -X DELETE "$base/api/orders/$orderId"
-
-    [pscustomobject]@{
-      BookingDelete = $deleteBookingStatus
-      OrderDelete = $deleteOrderStatus
-    }
-
-Expected:
-
-    BookingDelete = 405
-    OrderDelete = 405
-
-Use PATCH and update status to cancelled to preserve history.
-
-
-16. Sign in as Admin and test meal CRUD
---------------------------------------
-
-    $adminLoginBody = @{
-      username = "admin1"
-      password = "Admin@123"
-    } | ConvertTo-Json -Compress
-
-    $adminLoginStatus = $adminLoginBody | curl.exe `
-      -s -o NUL -w "%{http_code}" `
-      -c $adminCookies `
-      -X POST "$base/api/session" `
-      -H "Content-Type: application/json" `
-      --data-binary "@-"
-
-    $adminLoginStatus
-
-Expected:
-
-    201
-
-Create a temporary meal:
-
-    $mealBody = @{
-      name = "Speed Test Meal"
-      category = "Test"
-      description = "Temporary API test"
-      price = 1.50
-      isAvailable = $true
-    } | ConvertTo-Json -Compress
-
-    $temporaryMeal = (
-      $mealBody | curl.exe -s `
-        -b $adminCookies `
-        -X POST "$base/api/meals" `
-        -H "Content-Type: application/json" `
-        --data-binary "@-" |
-      ConvertFrom-Json
-    ).data
-
-    $temporaryMealId = $temporaryMeal._id
-    $temporaryMeal | Select-Object _id, name, price, isAvailable
-
-Update the temporary meal:
-
-    $mealPatchBody = @{
-      price = 2.25
-      isAvailable = $false
-    } | ConvertTo-Json -Compress
-
-    $patchedMeal = (
-      $mealPatchBody | curl.exe -s `
-        -b $adminCookies `
-        -X PATCH "$base/api/meals/$temporaryMealId" `
-        -H "Content-Type: application/json" `
-        --data-binary "@-" |
-      ConvertFrom-Json
-    ).data
-
-    $patchedMeal | Select-Object _id, name, price, isAvailable
-
-Expected:
-
-    price = 2.25
-    isAvailable = false
-
-Delete the temporary meal because it has no order history:
-
-    $deleteMealStatus = curl.exe -s -o NUL -w "%{http_code}" `
-      -b $adminCookies `
-      -X DELETE "$base/api/meals/$temporaryMealId"
-
-    $deleteMealStatus
-
-Expected:
-
-    204
-
-
-17. Sign out
-------------
-
-    $logoutStatus = curl.exe -s -o NUL -w "%{http_code}" `
-      -b $customerCookies `
-      -X DELETE "$base/api/session"
-
-    $logoutStatus
-
-Expected:
-
-    204
-
-
-18. Restore the clean demo state
---------------------------------
-
-After testing, reset the database:
-
-    npm run reset
-
-This removes the test booking, test order, every temporary Cookie-dependent
-state, and restores Branch 1/Branch 2 demo data.
-
-
-Tested result summary
----------------------
-
-The following results were confirmed against the current application:
-
-    Unauthenticated request             401
-    Customer login                      201
-    Branch 1 status                     active
-    Branch 2 status                     resting
-    Valid Branch 1 booking              pending
-    Duplicate Branch 1 booking          409
-    Branch 2 booking                    404
-    Branch 1 order                      placed
-    Server-calculated test total        15.00
-    Branch 2 order                      400
-    Staff 1 login                       201
-    Staff 1 order update                preparing
-    Staff 1 querying Branch 2           403
-    Staff 2 login                       201
-    Staff 2 orders                      0
-    Staff 2 bookings                    0
-    DELETE booking                      405
-    DELETE order                        405
-    Admin login                         201
-    Admin create meal                   201
-    Admin update meal price             2.25
-    Admin delete unused meal            204
-    Logout                              204
-
-
-Common mistakes
----------------
-
-1. Pasting curl.exe into the browser address bar.
-   Use a PowerShell terminal instead.
-
-2. Using curl instead of curl.exe.
-   In PowerShell, curl may resolve to Invoke-WebRequest.
-
-3. Using this pattern on Windows PowerShell:
-
-       curl.exe --data-raw $json
-
-   The JSON quotes can be lost. Use:
-
-       $json | curl.exe --data-binary "@-"
-
-4. Reusing the same Cookie file for two roles.
-   Use one file per role.
-
-5. Forgetting -b $cookies on protected requests.
-
-6. Running the fixed December dates after they pass.
-   Use the dynamic future-date code above.
-
-7. Forgetting to run npm run reset after testing.
+    docs\API.md
+        REST API contract and examples.
