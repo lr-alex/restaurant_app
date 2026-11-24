@@ -35,6 +35,8 @@ $base = "http://localhost:8099"
 STEP 1 - SESSION CREATE
 =======================
 
+$base = "http://localhost:8099"
+
 $customer = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 
 $customerLogin = Invoke-RestMethod `
