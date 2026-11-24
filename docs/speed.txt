@@ -1,203 +1,397 @@
-Saffron & Stone REST API Speed Test
-===================================
+Saffron & Stone REST API Manual Walkthrough
+===========================================
 
-Use PowerShell terminals. Do not paste commands into the browser address bar.
+Run these commands in PowerShell.
 
-The tested one-command runner is:
+Use two terminals:
 
-    npm run test:api
+1. Terminal 1 runs the application.
+2. Terminal 2 runs the API commands.
 
-It exercises the same session, role, Branch status, booking, order, Staff
-authorization, and Admin CRUD paths used by the application.
-
-
-1. Open the first PowerShell terminal
--------------------------------------
-
-    cd D:\study\hkmu\comp_3810_sever-side\proj\restaurant_app
-    npm run reset
-    npm start
-
-Expected:
-
-    Demo reset complete.
-    Accounts: customer1, customer2, staff1, staff2, admin1
-    Database restored to the pre-CRUD demo baseline.
-    Saffron & Stone listening at http://localhost:8099
-
-Keep this terminal running.
+Run the steps in order because later commands reuse variables from earlier
+commands.
 
 
-2. Open a second PowerShell terminal
-------------------------------------
+TERMINAL 1 - START THE APPLICATION
+==================================
 
-    cd D:\study\hkmu\comp_3810_sever-side\proj\restaurant_app
+cd D:\study\hkmu\comp_3810_sever-side\proj\restaurant_app
 
-Run the complete test:
+npm run reset
 
-    npm run test:api
+npm start
 
-Alternative direct invocation:
-
-    powershell -ExecutionPolicy Bypass -File .\scripts\api-speed.ps1
-
-If the server uses a different URL:
-
-    powershell -ExecutionPolicy Bypass -File .\scripts\api-speed.ps1 `
-      -BaseUrl "http://localhost:8100"
+Keep Terminal 1 running.
 
 
-3. Expected output
-------------------
+TERMINAL 2 - SET THE BASE URL
+=============================
 
-    PASS  Anonymous branches                   401
-    PASS  Customer login                       201
-    PASS  Customer role                        customer
-    PASS  Current customer session             200
-    PASS  Customer name                        Bob Johnson
-    PASS  Branch 1 operating status            active
-    PASS  Branch 2 operating status            resting
-    PASS  Meal catalog available               True
-    PASS  Create Branch 1 booking              201
-    PASS  New booking status                   pending
-    PASS  Reject duplicate booking             409
-    PASS  Reject resting-branch booking        404
-    PASS  Create Branch 1 order                201
-    PASS  New order status                     placed
-    PASS  Server-calculated order total        True
-    PASS  Reject resting-branch order          400
-    PASS  Staff 1 login                        201
-    PASS  Staff updates order                  200
-    PASS  Updated order status                 preparing
-    PASS  Staff branch isolation               403
-    PASS  Staff 2 login                        201
-    PASS  Staff 2 order count                  0
-    PASS  Staff 2 booking count                0
-    PASS  Booking DELETE is disabled           405
-    PASS  Order DELETE is disabled             405
-    PASS  Admin login                          201
-    PASS  Admin creates meal                   201
-    PASS  Admin updates meal                   200
-    PASS  Updated meal price                   2.25
-    PASS  Admin deletes unused meal            204
-    PASS  Customer logout                      204
+cd D:\study\hkmu\comp_3810_sever-side\proj\restaurant_app
 
-    Result: 31 passed, 0 failed
-    Run 'npm run reset' to remove the test booking and order.
-
-If any line starts with FAIL, the script exits with code 1.
+$base = "http://localhost:8099"
 
 
-4. Restore the demo baseline
-----------------------------
+STEP 1 - SESSION CREATE
+=======================
 
-After the test:
+$customer = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 
-    npm run reset
+$customerLogin = Invoke-RestMethod `
+  -Method Post `
+  -Uri "$base/api/session" `
+  -WebSession $customer `
+  -ContentType "application/json" `
+  -Body (@{
+    username = "customer1"
+    password = "Customer@123"
+  } | ConvertTo-Json -Compress)
 
-This removes the booking and order created by the test.
-
-
-5. Manual login check with PowerShell
--------------------------------------
-
-If the automated script cannot connect, test the server first:
-
-    curl.exe -s -o NUL -w "%{http_code}" `
-      http://localhost:8099/api/branches
+$customerLogin | ConvertTo-Json -Depth 5
 
 Expected:
 
-    401
+username = customer1
+role = customer
+profile.name = Bob Johnson
 
-Now log in using PowerShell native JSON and a real WebRequestSession:
 
-    $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+STEP 2 - SESSION READ
+=====================
 
-    $body = @{
-      username = "customer1"
-      password = "Customer@123"
-    } | ConvertTo-Json -Compress
+$currentSession = Invoke-RestMethod `
+  -Method Get `
+  -Uri "$base/api/session" `
+  -WebSession $customer
 
-    $request = @{
-      Method = "POST"
-      Uri = "http://localhost:8099/api/session"
-      WebSession = $session
-      ContentType = "application/json"
-      Body = $body
-      UseBasicParsing = $true
+$currentSession | ConvertTo-Json -Depth 5
+
+$currentSession.data.profile | Format-List
+
+
+STEP 3 - BRANCH READ
+====================
+
+$branches = (
+  Invoke-RestMethod `
+    -Method Get `
+    -Uri "$base/api/branches" `
+    -WebSession $customer
+).data
+
+$branches |
+  Select-Object branchNo, name, operatingStatus |
+  Format-Table
+
+Expected:
+
+Branch 1 = active
+Branch 2 = resting
+Branch 3 = active
+Branch 4 = active
+
+
+STEP 4 - MEAL READ
+==================
+
+$meals = (
+  Invoke-RestMethod `
+    -Method Get `
+    -Uri "$base/api/meals" `
+    -WebSession $customer
+).data
+
+$mealId = $meals[0]._id
+
+$meals |
+  Select-Object _id, name, category, price |
+  Format-Table
+
+$mealId
+
+
+STEP 5 - BOOKING CREATE
+=======================
+
+$bookingDate = (Get-Date).Date.AddDays(7)
+
+while ($bookingDate.DayOfWeek -eq "Monday") {
+  $bookingDate = $bookingDate.AddDays(1)
+}
+
+$bookingBody = @{
+  branchNo = 1
+  bookingDate = $bookingDate.ToString("yyyy-MM-dd")
+  slotStart = "19:00"
+  slotEnd = "21:00"
+  partySize = 2
+  notes = "Manual speed test"
+}
+
+$booking = Invoke-RestMethod `
+  -Method Post `
+  -Uri "$base/api/bookings" `
+  -WebSession $customer `
+  -ContentType "application/json" `
+  -Body ($bookingBody | ConvertTo-Json -Compress)
+
+$bookingId = $booking.data._id
+
+$booking.data | Format-List
+
+Expected:
+
+status = pending
+branchNo = 1
+partySize = 2
+
+
+STEP 6 - BOOKING READ
+=====================
+
+$bookingRead = Invoke-RestMethod `
+  -Method Get `
+  -Uri "$base/api/bookings/$bookingId" `
+  -WebSession $customer
+
+$bookingRead.data | Format-List
+
+
+STEP 7 - BOOKING UPDATE
+=======================
+
+$bookingUpdateBody = @{
+  branchNo = 1
+  bookingDate = $bookingDate.ToString("yyyy-MM-dd")
+  slotStart = "19:00"
+  slotEnd = "21:00"
+  partySize = 3
+  notes = "Manual speed test updated"
+}
+
+$bookingUpdate = Invoke-RestMethod `
+  -Method Patch `
+  -Uri "$base/api/bookings/$bookingId" `
+  -WebSession $customer `
+  -ContentType "application/json" `
+  -Body ($bookingUpdateBody | ConvertTo-Json -Compress)
+
+$bookingUpdate.data | Format-List
+
+Expected:
+
+partySize = 3
+notes = Manual speed test updated
+
+
+STEP 8 - ORDER CREATE
+=====================
+
+$orderBody = @{
+  branchNo = 1
+  items = @(
+    @{
+      mealId = $mealId
+      quantity = 1
     }
+  )
+}
 
-    Invoke-WebRequest @request
+$order = Invoke-RestMethod `
+  -Method Post `
+  -Uri "$base/api/orders" `
+  -WebSession $customer `
+  -ContentType "application/json" `
+  -Body ($orderBody | ConvertTo-Json -Depth 5 -Compress)
+
+$orderId = $order.data._id
+
+$order.data | Format-List
 
 Expected:
 
-    201 Created
-
-Check the stored session:
-
-    $currentSession = Invoke-RestMethod `
-      -Uri "http://localhost:8099/api/session" `
-      -WebSession $session
-
-The default table view may collapse the nested profile to "@{...}". Print the
-complete response:
-
-    $currentSession | ConvertTo-Json -Depth 5
-
-Print the profile fields explicitly:
-
-    $currentSession.data.profile | Format-List
-
-Expected JSON:
-
-    {
-      "data": {
-        "username": "customer1",
-        "role": "customer",
-        "profile": {
-          "id": "MONGODB_OBJECT_ID",
-          "name": "Bob Johnson",
-          "branchNo": null
-        }
-      }
-    }
-
-Expected profile fields:
-
-    id       : MONGODB_OBJECT_ID
-    name     : Bob Johnson
-    branchNo :
+status = placed
+items contains the selected meal
+totalAmount is calculated by the server
 
 
-6. Why the old login command returned 400
------------------------------------------
+STEP 9 - STAFF SESSION CREATE
+=============================
 
-This command is unreliable in Windows PowerShell 5.1:
+$staff = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 
-    curl.exe --data-raw '{"username":"customer1","password":"Customer@123"}'
+$staffLogin = Invoke-RestMethod `
+  -Method Post `
+  -Uri "$base/api/session" `
+  -WebSession $staff `
+  -ContentType "application/json" `
+  -Body (@{
+    username = "staff1"
+    password = "Staff@123"
+  } | ConvertTo-Json -Compress)
 
-PowerShell can remove the JSON double quotes before curl receives the argument.
-The server then responds with:
+$staffLogin | ConvertTo-Json -Depth 5
 
-    400 Bad Request
-    Expected property name or '}' in JSON
+Expected:
 
-Use the tested `scripts/api-speed.ps1` script, or build the body with
-`ConvertTo-Json` and pass it as a PowerShell object/body.
-
-The speed script uses `Invoke-WebRequest` and `ConvertTo-Json`, so it does not
-depend on browser interaction, curl aliases, or command-line JSON quoting.
+role = staff
+profile.branchNo = 1
 
 
-7. Files involved
------------------
+STEP 10 - ORDER UPDATE BY STAFF
+===============================
 
-    docs\speed.txt
-        This procedure and expected output.
+$orderUpdate = Invoke-RestMethod `
+  -Method Patch `
+  -Uri "$base/api/orders/$orderId" `
+  -WebSession $staff `
+  -ContentType "application/json" `
+  -Body (@{ status = "preparing" } | ConvertTo-Json -Compress)
 
-    scripts\api-speed.ps1
-        Executable end-to-end API test.
+$orderUpdate.data | Format-List
 
-    docs\API.md
-        REST API contract and examples.
+Expected:
+
+status = preparing
+
+
+STEP 11 - ORDER READ BY STAFF
+=============================
+
+$staffOrders = (
+  Invoke-RestMethod `
+    -Method Get `
+    -Uri "$base/api/orders" `
+    -WebSession $staff
+).data
+
+$staffOrders |
+  Select-Object _id, branchNo, status, totalAmount |
+  Format-Table
+
+
+STEP 12 - ADMIN SESSION CREATE
+==============================
+
+$admin = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+
+$adminLogin = Invoke-RestMethod `
+  -Method Post `
+  -Uri "$base/api/session" `
+  -WebSession $admin `
+  -ContentType "application/json" `
+  -Body (@{
+    username = "admin1"
+    password = "Admin@123"
+  } | ConvertTo-Json -Compress)
+
+$adminLogin | ConvertTo-Json -Depth 5
+
+Expected:
+
+role = admin
+
+
+STEP 13 - MEAL CREATE BY ADMIN
+==============================
+
+$temporaryMeal = Invoke-RestMethod `
+  -Method Post `
+  -Uri "$base/api/meals" `
+  -WebSession $admin `
+  -ContentType "application/json" `
+  -Body (@{
+    name = "Manual Speed Meal"
+    category = "Test"
+    description = "Temporary API test"
+    price = 1.50
+    isAvailable = $true
+  } | ConvertTo-Json -Compress)
+
+$temporaryMealId = $temporaryMeal.data._id
+
+$temporaryMeal.data | Format-List
+
+
+STEP 14 - MEAL UPDATE BY ADMIN
+==============================
+
+$mealUpdate = Invoke-RestMethod `
+  -Method Patch `
+  -Uri "$base/api/meals/$temporaryMealId" `
+  -WebSession $admin `
+  -ContentType "application/json" `
+  -Body (@{
+    price = 2.25
+    isAvailable = $false
+  } | ConvertTo-Json -Compress)
+
+$mealUpdate.data | Format-List
+
+Expected:
+
+price = 2.25
+isAvailable = false
+
+
+STEP 15 - MEAL DELETE BY ADMIN
+==============================
+
+$mealDelete = Invoke-WebRequest `
+  -Method Delete `
+  -Uri "$base/api/meals/$temporaryMealId" `
+  -WebSession $admin `
+  -UseBasicParsing
+
+$mealDelete.StatusCode
+
+Expected:
+
+204
+
+
+STEP 16 - SESSION DELETE
+========================
+
+$logout = Invoke-WebRequest `
+  -Method Delete `
+  -Uri "$base/api/session" `
+  -WebSession $customer `
+  -UseBasicParsing
+
+$logout.StatusCode
+
+Expected:
+
+204
+
+
+STEP 17 - RESET THE DATABASE
+============================
+
+Stop the server with Ctrl+C in Terminal 1.
+
+In Terminal 1:
+
+npm run reset
+
+This removes the test booking, test order, and any test meal records.
+
+
+TESTED RESULT SUMMARY
+=====================
+
+Customer login                         Bob Johnson / customer
+Branch 1                               active
+Branch 2                               resting
+Initial meal count                     8
+Booking create                         pending / party size 2
+Booking read                           party size 2
+Booking update                         party size 3
+Order create                           placed / server total 7.50
+Staff login                            staff1 / Branch 1
+Order update                           preparing
+Admin meal create                      Manual Speed Meal
+Admin meal update                      price 2.25
+Admin meal delete                      204
+Customer logout                        204
