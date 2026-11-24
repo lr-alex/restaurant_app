@@ -136,15 +136,38 @@ Expected:
 
 Check the stored session:
 
-    Invoke-RestMethod `
+    $currentSession = Invoke-RestMethod `
       -Uri "http://localhost:8099/api/session" `
       -WebSession $session
 
-Expected:
+The default table view may collapse the nested profile to "@{...}". Print the
+complete response:
 
-    username = customer1
-    role = customer
-    profile.name = Bob Johnson
+    $currentSession | ConvertTo-Json -Depth 5
+
+Print the profile fields explicitly:
+
+    $currentSession.data.profile | Format-List
+
+Expected JSON:
+
+    {
+      "data": {
+        "username": "customer1",
+        "role": "customer",
+        "profile": {
+          "id": "MONGODB_OBJECT_ID",
+          "name": "Bob Johnson",
+          "branchNo": null
+        }
+      }
+    }
+
+Expected profile fields:
+
+    id       : MONGODB_OBJECT_ID
+    name     : Bob Johnson
+    branchNo :
 
 
 6. Why the old login command returned 400
