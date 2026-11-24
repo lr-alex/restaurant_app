@@ -1,15 +1,14 @@
-Saffron & Stone REST API Manual Walkthrough
-===========================================
+Saffron & Stone REST API Manual CRUD Test
+=========================================
 
-Run these commands in PowerShell.
+This file contains 8 manual CRUD operations:
 
-Use two terminals:
+- Create: 2 operations
+- Read: 2 operations
+- Update: 2 operations
+- Delete: 2 operations
 
-1. Terminal 1 runs the application.
-2. Terminal 2 runs the API commands.
-
-Run the steps in order because later commands reuse variables from earlier
-commands.
+Run the commands in PowerShell and execute the steps in order.
 
 
 TERMINAL 1 - START THE APPLICATION
@@ -24,16 +23,10 @@ npm start
 Keep Terminal 1 running.
 
 
-TERMINAL 2 - SET THE BASE URL
-=============================
+TERMINAL 2 - PREPARE CUSTOMER ACCESS
+====================================
 
 cd D:\study\hkmu\comp_3810_sever-side\proj\restaurant_app
-
-$base = "http://localhost:8099"
-
-
-STEP 1 - SESSION CREATE
-=======================
 
 $base = "http://localhost:8099"
 
@@ -58,21 +51,83 @@ role = customer
 profile.name = Bob Johnson
 
 
-STEP 2 - SESSION READ
-=====================
+CREATE 1 - CREATE A BOOKING
+===========================
 
-$currentSession = Invoke-RestMethod `
-  -Method Get `
+$bookingDate = (Get-Date).Date.AddDays(7)
+
+while ($bookingDate.DayOfWeek -eq "Monday") {
+  $bookingDate = $bookingDate.AddDays(1)
+}
+
+$bookingCreateBody = @{
+  branchNo = 1
+  bookingDate = $bookingDate.ToString("yyyy-MM-dd")
+  slotStart = "19:00"
+  slotEnd = "21:00"
+  partySize = 2
+  notes = "CRUD create 1"
+}
+
+$bookingCreate = Invoke-RestMethod `
+  -Method Post `
+  -Uri "$base/api/bookings" `
+  -WebSession $customer `
+  -ContentType "application/json" `
+  -Body ($bookingCreateBody | ConvertTo-Json -Compress)
+
+$bookingId = $bookingCreate.data._id
+
+$bookingCreate.data | Format-List
+
+Expected:
+
+branchNo = 1
+partySize = 2
+status = pending
+
+
+CREATE 2 - CREATE A TEMPORARY MEAL
+==================================
+
+$admin = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+
+$adminLogin = Invoke-RestMethod `
+  -Method Post `
   -Uri "$base/api/session" `
-  -WebSession $customer
+  -WebSession $admin `
+  -ContentType "application/json" `
+  -Body (@{
+    username = "admin1"
+    password = "Admin@123"
+  } | ConvertTo-Json -Compress)
 
-$currentSession | ConvertTo-Json -Depth 5
+$mealCreate = Invoke-RestMethod `
+  -Method Post `
+  -Uri "$base/api/meals" `
+  -WebSession $admin `
+  -ContentType "application/json" `
+  -Body (@{
+    name = "CRUD Test Meal"
+    category = "Test"
+    description = "Temporary meal"
+    price = 1.50
+    isAvailable = $true
+  } | ConvertTo-Json -Compress)
 
-$currentSession.data.profile | Format-List
+$temporaryMealId = $mealCreate.data._id
+
+$mealCreate.data | Format-List
+
+Expected:
+
+name = CRUD Test Meal
+price = 1.5
+isAvailable = true
 
 
-STEP 3 - BRANCH READ
-====================
+READ 1 - READ BRANCHES
+======================
 
 $branches = (
   Invoke-RestMethod `
@@ -93,74 +148,46 @@ Branch 3 = active
 Branch 4 = active
 
 
-STEP 4 - MEAL READ
-==================
+READ 2 - READ STAFF ORDERS
+==========================
 
-$meals = (
+$staff = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+
+$staffLogin = Invoke-RestMethod `
+  -Method Post `
+  -Uri "$base/api/session" `
+  -WebSession $staff `
+  -ContentType "application/json" `
+  -Body (@{
+    username = "staff1"
+    password = "Staff@123"
+  } | ConvertTo-Json -Compress)
+
+$staffOrders = (
   Invoke-RestMethod `
     -Method Get `
-    -Uri "$base/api/meals" `
-    -WebSession $customer
+    -Uri "$base/api/orders" `
+    -WebSession $staff
 ).data
 
-$mealId = $meals[0]._id
-
-$meals |
-  Select-Object _id, name, category, price |
+$staffOrders |
+  Select-Object _id, branchNo, status, totalAmount |
   Format-Table
 
-$mealId
-
-
-STEP 5 - BOOKING CREATE
-=======================
-
-$bookingDate = (Get-Date).Date.AddDays(7)
-
-while ($bookingDate.DayOfWeek -eq "Monday") {
-  $bookingDate = $bookingDate.AddDays(1)
-}
-
-$bookingBody = @{
-  branchNo = 1
-  bookingDate = $bookingDate.ToString("yyyy-MM-dd")
-  slotStart = "19:00"
-  slotEnd = "21:00"
-  partySize = 2
-  notes = "Manual speed test"
-}
-
-$booking = Invoke-RestMethod `
-  -Method Post `
-  -Uri "$base/api/bookings" `
-  -WebSession $customer `
-  -ContentType "application/json" `
-  -Body ($bookingBody | ConvertTo-Json -Compress)
-
-$bookingId = $booking.data._id
-
-$booking.data | Format-List
+$orderId = (
+  $staffOrders |
+    Where-Object { $_.status -eq "placed" } |
+    Select-Object -First 1
+)._id
 
 Expected:
 
-status = pending
-branchNo = 1
-partySize = 2
+The response contains only Branch 1 orders.
+One order has status placed and is stored in $orderId.
 
 
-STEP 6 - BOOKING READ
-=====================
-
-$bookingRead = Invoke-RestMethod `
-  -Method Get `
-  -Uri "$base/api/bookings/$bookingId" `
-  -WebSession $customer
-
-$bookingRead.data | Format-List
-
-
-STEP 7 - BOOKING UPDATE
-=======================
+UPDATE 1 - UPDATE THE BOOKING
+=============================
 
 $bookingUpdateBody = @{
   branchNo = 1
@@ -168,7 +195,7 @@ $bookingUpdateBody = @{
   slotStart = "19:00"
   slotEnd = "21:00"
   partySize = 3
-  notes = "Manual speed test updated"
+  notes = "CRUD update 1"
 }
 
 $bookingUpdate = Invoke-RestMethod `
@@ -183,72 +210,20 @@ $bookingUpdate.data | Format-List
 Expected:
 
 partySize = 3
-notes = Manual speed test updated
+notes = CRUD update 1
 
 
-STEP 8 - ORDER CREATE
-=====================
-
-$orderBody = @{
-  branchNo = 1
-  items = @(
-    @{
-      mealId = $mealId
-      quantity = 1
-    }
-  )
-}
-
-$order = Invoke-RestMethod `
-  -Method Post `
-  -Uri "$base/api/orders" `
-  -WebSession $customer `
-  -ContentType "application/json" `
-  -Body ($orderBody | ConvertTo-Json -Depth 5 -Compress)
-
-$orderId = $order.data._id
-
-$order.data | Format-List
-
-Expected:
-
-status = placed
-items contains the selected meal
-totalAmount is calculated by the server
-
-
-STEP 9 - STAFF SESSION CREATE
-=============================
-
-$staff = New-Object Microsoft.PowerShell.Commands.WebRequestSession
-
-$staffLogin = Invoke-RestMethod `
-  -Method Post `
-  -Uri "$base/api/session" `
-  -WebSession $staff `
-  -ContentType "application/json" `
-  -Body (@{
-    username = "staff1"
-    password = "Staff@123"
-  } | ConvertTo-Json -Compress)
-
-$staffLogin | ConvertTo-Json -Depth 5
-
-Expected:
-
-role = staff
-profile.branchNo = 1
-
-
-STEP 10 - ORDER UPDATE BY STAFF
-===============================
+UPDATE 2 - UPDATE THE ORDER STATUS
+==================================
 
 $orderUpdate = Invoke-RestMethod `
   -Method Patch `
   -Uri "$base/api/orders/$orderId" `
   -WebSession $staff `
   -ContentType "application/json" `
-  -Body (@{ status = "preparing" } | ConvertTo-Json -Compress)
+  -Body (@{
+    status = "preparing"
+  } | ConvertTo-Json -Compress)
 
 $orderUpdate.data | Format-List
 
@@ -257,87 +232,8 @@ Expected:
 status = preparing
 
 
-STEP 11 - ORDER READ BY STAFF
-=============================
-
-$staffOrders = (
-  Invoke-RestMethod `
-    -Method Get `
-    -Uri "$base/api/orders" `
-    -WebSession $staff
-).data
-
-$staffOrders |
-  Select-Object _id, branchNo, status, totalAmount |
-  Format-Table
-
-
-STEP 12 - ADMIN SESSION CREATE
-==============================
-
-$admin = New-Object Microsoft.PowerShell.Commands.WebRequestSession
-
-$adminLogin = Invoke-RestMethod `
-  -Method Post `
-  -Uri "$base/api/session" `
-  -WebSession $admin `
-  -ContentType "application/json" `
-  -Body (@{
-    username = "admin1"
-    password = "Admin@123"
-  } | ConvertTo-Json -Compress)
-
-$adminLogin | ConvertTo-Json -Depth 5
-
-Expected:
-
-role = admin
-
-
-STEP 13 - MEAL CREATE BY ADMIN
-==============================
-
-$temporaryMeal = Invoke-RestMethod `
-  -Method Post `
-  -Uri "$base/api/meals" `
-  -WebSession $admin `
-  -ContentType "application/json" `
-  -Body (@{
-    name = "Manual Speed Meal"
-    category = "Test"
-    description = "Temporary API test"
-    price = 1.50
-    isAvailable = $true
-  } | ConvertTo-Json -Compress)
-
-$temporaryMealId = $temporaryMeal.data._id
-
-$temporaryMeal.data | Format-List
-
-
-STEP 14 - MEAL UPDATE BY ADMIN
-==============================
-
-$mealUpdate = Invoke-RestMethod `
-  -Method Patch `
-  -Uri "$base/api/meals/$temporaryMealId" `
-  -WebSession $admin `
-  -ContentType "application/json" `
-  -Body (@{
-    price = 2.25
-    isAvailable = $false
-  } | ConvertTo-Json -Compress)
-
-$mealUpdate.data | Format-List
-
-Expected:
-
-price = 2.25
-isAvailable = false
-
-
-STEP 15 - MEAL DELETE BY ADMIN
-==============================
+DELETE 1 - DELETE THE TEMPORARY MEAL
+====================================
 
 $mealDelete = Invoke-WebRequest `
   -Method Delete `
@@ -352,8 +248,8 @@ Expected:
 204
 
 
-STEP 16 - SESSION DELETE
-========================
+DELETE 2 - DELETE THE CUSTOMER SESSION
+======================================
 
 $logout = Invoke-WebRequest `
   -Method Delete `
@@ -368,32 +264,26 @@ Expected:
 204
 
 
-STEP 17 - RESET THE DATABASE
-============================
+RESTORE THE DEMO DATA
+=====================
 
-Stop the server with Ctrl+C in Terminal 1.
+Stop the server in Terminal 1 with Ctrl+C.
 
-In Terminal 1:
+Run:
+
+cd D:\study\hkmu\comp_3810_sever-side\proj\restaurant_app
 
 npm run reset
-
-This removes the test booking, test order, and any test meal records.
 
 
 TESTED RESULT SUMMARY
 =====================
 
-Customer login                         Bob Johnson / customer
-Branch 1                               active
-Branch 2                               resting
-Initial meal count                     8
-Booking create                         pending / party size 2
-Booking read                           party size 2
-Booking update                         party size 3
-Order create                           placed / server total 7.50
-Staff login                            staff1 / Branch 1
-Order update                           preparing
-Admin meal create                      Manual Speed Meal
-Admin meal update                      price 2.25
-Admin meal delete                      204
-Customer logout                        204
+CREATE 1 - Booking creation       pending
+CREATE 2 - Meal creation          CRUD Test Meal
+READ 1 - Branch read              Branch 1 active
+READ 2 - Order read               Branch 1 orders visible to Staff 1
+UPDATE 1 - Booking update         partySize 3
+UPDATE 2 - Order update           preparing
+DELETE 1 - Meal delete            204
+DELETE 2 - Session delete         204
